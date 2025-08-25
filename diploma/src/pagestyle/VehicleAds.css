@@ -1,0 +1,851 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.vehicle-ads-container {
+  font-family: 'Arial', sans-serif;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Vehicle Category Tabs */
+.vehicle-category-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 1400px;
+  margin: 0 auto 30px auto;
+}
+
+.category-tab {
+  padding: 12px 24px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #34495e;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: capitalize;
+}
+
+.category-tab:hover {
+  border-color: #3498db;
+  background: #f8f9fa;
+}
+
+.category-tab.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+/* Main Content Layout - 35% / 65% Split */
+.main-content {
+  display: flex;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Filters Section - 35% */
+.filters-section {
+  flex: 0 0 35%;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.filters-section h2 {
+  color: #2c3e50;
+  margin-bottom: 25px;
+  font-size: 24px;
+  font-weight: 600;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.filter-group {
+  margin-bottom: 20px;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #34495e;
+  font-size: 14px;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Range Filter Styling */
+.range-filter .range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.range-filter .range-inputs input {
+  flex: 1;
+}
+
+.range-filter .range-inputs span {
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+/* Search Button */
+.search-button {
+  width: 100%;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.search-button:hover {
+  background: linear-gradient(135deg, #2980b9, #1f5f8b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Search Saver */
+.search-saver {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 2px solid #ecf0f1;
+}
+
+.save-search-button {
+  width: 100%;
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-search-button:hover {
+  background: #219a52;
+  transform: translateY(-1px);
+}
+
+.saved-searches {
+  margin-top: 15px;
+}
+
+.saved-searches h4 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.saved-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.saved-search-item span {
+  font-size: 14px;
+  color: #34495e;
+}
+
+.saved-search-item button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.saved-search-item button:hover {
+  background: #2980b9;
+}
+
+/* Vehicles Section - 65% */
+.vehicles-section {
+  flex: 0 0 65%;
+}
+
+/* Sort Section */
+.sort-section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sort-section label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.sort-section select {
+  padding: 10px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 200px;
+  transition: border-color 0.3s ease;
+}
+
+.sort-section select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+/* Vehicle Cards */
+.vehicle-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vehicle-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 200px;
+}
+
+.vehicle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.vehicle-image {
+  flex: 0 0 300px;
+  overflow: hidden;
+}
+
+.vehicle-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.vehicle-card:hover .vehicle-image img {
+  transform: scale(1.05);
+}
+
+.vehicle-info {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.vehicle-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e74c3c;
+  margin-bottom: 8px;
+}
+
+.vehicle-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.vehicle-details {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.vehicle-location-phone {
+  font-size: 14px;
+  color: #34495e;
+  font-weight: 500;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin: 30px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pagination button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.pagination button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Back to Top Button - Centered and appears after pagination */
+.back-to-top {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.back-to-top button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-to-top button:hover {
+  background: #c0392b;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.back-to-top.hidden {
+  display: none;
+}
+
+/* Detailed Vehicle View */
+.vehicle-detail {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.detail-header {
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: white;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.detail-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.detail-content {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+}
+
+/* Detail Left Side */
+.detail-left {
+  flex: 0 0 60%;
+}
+
+/* Detail Right Side */
+.detail-right {
+  flex: 0 0 40%;
+}
+
+.spec-section,
+.price-section,
+.description-section,
+.history-section,
+.insurance-section,
+.seller-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-left: 4px solid #3498db;
+}
+
+.spec-section h2,
+.price-section h3,
+.description-section h3,
+.history-section h3,
+.insurance-section h3,
+.seller-section h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.spec-label {
+  font-weight: 600;
+  color: #34495e;
+}
+
+.spec-value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Price Section */
+.main-price {
+  font-size: 36px;
+  font-weight: 700;
+  color: #e74c3c;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.credit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.credit-option {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.credit-option span:first-child {
+  font-weight: 600;
+  color: #34495e;
+}
+
+.credit-option span:last-child {
+  color: #27ae60;
+  font-weight: 700;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.save-button,
+.share-button {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-button {
+  background: #27ae60;
+  color: white;
+}
+
+.save-button:hover {
+  background: #219a52;
+  transform: translateY(-2px);
+}
+
+.share-button {
+  background: #3498db;
+  color: white;
+}
+
+.share-button:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Insurance Calculator */
+.insurance-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.insurance-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.insurance-form label {
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.insurance-form input,
+.insurance-form select {
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.insurance-form input:focus,
+.insurance-form select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.calculate-button {
+  grid-column: 1 / -1;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.calculate-button:hover {
+  background: #c0392b;
+}
+
+.insurance-result {
+  background: #d5f4e6;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.insurance-result h4 {
+  color: #27ae60;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.insurance-result p {
+  color: #2c3e50;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+/* Seller Contact */
+.seller-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.contact-label {
+  font-weight: 600;
+  color: #34495e;
+}
+
+.contact-value {
+  color: #2c3e50;
+}
+
+.contact-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.call-button,
+.message-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.call-button {
+  background: #27ae60;
+  color: white;
+}
+
+.call-button:hover {
+  background: #219a52;
+}
+
+.message-button {
+  background: #3498db;
+  color: white;
+}
+
+.message-button:hover {
+  background: #2980b9;
+}
+
+/* Saved Ads Section */
+.saved-ads {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 2px solid #ecf0f1;
+}
+
+.saved-ads h4 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.saved-ad-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.saved-ad-item span {
+  font-size: 14px;
+  color: #34495e;
+}
+
+.saved-ad-item button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.saved-ad-item button:hover {
+  background: #c0392b;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .main-content {
+    flex-direction: column;
+  }
+  
+  .filters-section {
+    flex: none;
+    position: static;
+  }
+  
+  .vehicles-section {
+    flex: none;
+  }
+  
+  .detail-content {
+    flex-direction: column;
+  }
+  
+  .detail-left,
+  .detail-right {
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .vehicle-ads-container {
+    padding: 10px;
+  }
+  
+  .vehicle-category-tabs {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .category-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .vehicle-card {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .vehicle-image {
+    flex: none;
+    height: 200px;
+  }
+  
+  .spec-grid,
+  .credit-grid,
+  .insurance-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons,
+  .contact-buttons {
+    flex-direction: column;
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filters-section,
+  .sort-section,
+  .vehicle-card,
+  .pagination {
+    padding: 15px;
+  }
+  
+  .vehicle-price {
+    font-size: 20px;
+  }
+  
+  .vehicle-name {
+    font-size: 18px;
+  }
+  
+  .main-price {
+    font-size: 28px;
+  }
+  
+  .detail-header {
+    padding: 20px;
+  }
+  
+  .detail-header h1 {
+    font-size: 24px;
+  }
+  
+  .detail-content {
+    padding: 20px;
+  }
+}

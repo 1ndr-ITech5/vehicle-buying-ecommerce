@@ -1,0 +1,45 @@
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 60px;
+  background-color: black;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo img {
+  height: 90px;
+  width: 90px;
+}
+
+.autoshqip-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.3rem;
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  gap: 70px;
+  list-style: none;
+  margin-left: -600px;
+}
+
+.nav-links a {
+  cursor: pointer;
+  font-weight: 500;
+  color: white;
+  text-decoration: none;
+  font-size: 1.8rem;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: red;
+}

@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  vehicleAds    VehicleAd[]
+  partAds       PartAd[]
+}
+
+model VehicleAd {
+  id            String    @id @default(cuid())
+  name          String
+  make          String
+  model         String
+  year          Int
+  price         Float
+  mileage       Int
+  transmission  String
+  fuel          String
+  color         String
+  location      String
+  phone         String
+  description   String
+  imageUrl      String?
+  power         Int
+  engine        String
+  carPlates     String
+  createdAt     DateTime  @default(now())
+  
+  owner         User      @relation(fields: [ownerId], references: [id])
+  ownerId       String
+}
+
+model PartCategory {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  icon            String?
+  subCategories   PartSubCategory[]
+}
+
+model PartSubCategory {
+  id              String    @id @default(cuid())
+  name            String
+  partCount       Int
+  
+  category        PartCategory @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  
+  parts           PartAd[]
+}
+
+model PartAd {
+  id              String    @id @default(cuid())
+  name            String
+  price           Float
+  location        String
+  phone           String
+  imageUrl        String?
+  condition       String // "New" or "Used"
+  year            Int
+  carMark         String
+  quantity        Int
+  description     String
+  createdAt       DateTime  @default(now())
+  
+  seller          User      @relation(fields: [sellerId], references: [id])
+  sellerId        String
+  
+  subCategory     PartSubCategory @relation(fields: [subCategoryId], references: [id])
+  subCategoryId   String
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  name      String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
