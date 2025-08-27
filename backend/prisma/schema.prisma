@@ -24,7 +24,7 @@ model VehicleAd {
   year          Int
   price         Float
   mileage       Int
-  transmission  String
+  transmission  String?
   fuel          String
   color         String
   location      String

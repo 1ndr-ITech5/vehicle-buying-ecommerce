@@ -37,16 +37,19 @@ const Spare = () => {
         }
     }, []);
 
-    const fetchParts = useCallback(async () => {
+    const fetchParts = useCallback(async (searchFilters) => {
         if (!selectedSubCategory) return;
         try {
-            const params = { ...filters, subCategoryId: selectedSubCategory.id };
+            const params = { ...searchFilters, subCategoryId: selectedSubCategory.id };
+            if (params.condition && Array.isArray(params.condition)) {
+                params.condition = params.condition.join(',');
+            }
             const response = await axios.get(`${API_URL}/parts`, { params });
             setParts(response.data);
         } catch (error) {
             console.error("Error fetching parts:", error);
         }
-    }, [selectedSubCategory, filters]);
+    }, [selectedSubCategory]);
 
     useEffect(() => {
         if (view === 'categories') {
@@ -61,7 +64,7 @@ const Spare = () => {
     }, [view, selectedSubCategory, fetchParts]);
 
     const handleSearch = () => {
-        fetchParts();
+        fetchParts(filters);
     };
 
     const handleSaveSearch = () => {

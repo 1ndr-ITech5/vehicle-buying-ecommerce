@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './../pagestyle/VehicleAds.css';
 
 const API_URL = 'http://localhost:3001/api';
 
 const VehicleAds = () => {
+  const location = useLocation();
   const [activeVehicleCategory, setActiveVehicleCategory] = useState('car');
   const [filters, setFilters] = useState({ type: '', model: '', yearFrom: '', yearTo: '', priceFrom: '', priceTo: '', powerFrom: '', powerTo: '', mileageFrom: '', mileageTo: '', transmitor: '', fuel: '', colour: '', location: '' });
   const [sortBy, setSortBy] = useState('recent');
@@ -36,6 +38,33 @@ const VehicleAds = () => {
     }
   };
 
+  const fetchVehicleById = async (id) => {
+    try {
+      const response = await axios.get(`${API_URL}/vehicles/${id}`);
+      setSelectedVehicle(response.data);
+    } catch (error) {
+      console.error("Error fetching vehicle:", error);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const vehicleId = params.get('vehicleId');
+    if (vehicleId) {
+      fetchVehicleById(vehicleId);
+    } else {
+      const newFilters = {};
+      for (const [key, value] of params.entries()) {
+        if (key === 'category') {
+          setActiveVehicleCategory(value);
+        } else {
+          newFilters[key] = value;
+        }
+      }
+      setFilters(prev => ({ ...prev, ...newFilters }));
+    }
+  }, [location.search]);
+
   useEffect(() => {
     fetchVehicles();
   }, [sortBy, activeVehicleCategory]);
@@ -46,12 +75,31 @@ const VehicleAds = () => {
   }, []);
 
   const handleFilterChange = (filterName, value) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
+    let processedValue = value;
+    if (filterName === 'yearFrom' || filterName === 'yearTo') {
+      const year = parseInt(value, 10);
+      if (year < 1990) {
+        processedValue = '1990';
+      } else if (year > 2025) {
+        processedValue = '2025';
+      }
+    }
+    if (filterName === 'priceFrom' || filterName === 'priceTo') {
+        const price = parseInt(value, 10);
+        if (price < 0) {
+            processedValue = '0';
+        }
+    }
+    setFilters(prev => ({ ...prev, [filterName]: processedValue }));
   };
 
   const handleVehicleCategoryChange = (category) => {
     setActiveVehicleCategory(category);
-    setFilters(prev => ({ ...prev, type: '', model: '' }));
+    const newFilters = { ...filters, type: '', model: '' };
+    if (category === 'motorcycle') {
+      newFilters.transmitor = '';
+    }
+    setFilters(newFilters);
   };
 
   const handleSaveSearch = () => {
@@ -94,6 +142,10 @@ const VehicleAds = () => {
             <div className="filter-group"><label>Model</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">Select Model</option>{(vehicleData[activeVehicleCategory].models[filters.type] || []).map(model => (<option key={model} value={model}>{model}</option>))}</select></div>
             <div className="filter-group range-filter"><label>Year</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
             <div className="filter-group range-filter"><label>Price (€)</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.priceFrom} onChange={(e) => handleFilterChange('priceFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.priceTo} onChange={(e) => handleFilterChange('priceTo', e.target.value)} /></div></div>
+            <div className="filter-group"><label>Location</label><select value={filters.location} onChange={(e) => handleFilterChange('location', e.target.value)}><option value="">Select Location</option>{albanianCities.map(city => (<option key={city} value={city}>{city}</option>))}</select></div>
+            {activeVehicleCategory !== 'motorcycle' && <div className="filter-group"><label>Gearbox</label><select value={filters.transmitor} onChange={(e) => handleFilterChange('transmitor', e.target.value)}><option value="">Select Gearbox</option>{transmitorOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>}
+            <div className="filter-group"><label>Fuel</label><select value={filters.fuel} onChange={(e) => handleFilterChange('fuel', e.target.value)}><option value="">Select Fuel</option>{fuelOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>
+            <div className="filter-group range-filter"><label>Mileage</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.mileageFrom} onChange={(e) => handleFilterChange('mileageFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.mileageTo} onChange={(e) => handleFilterChange('mileageTo', e.target.value)} /></div></div>
             <button className="search-button" onClick={fetchVehicles}>Search</button>
             <div className="saved-searches-section">
                 <button className="save-search-button" onClick={handleSaveSearch}>Save Search</button>

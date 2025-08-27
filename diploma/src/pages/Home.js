@@ -9,12 +9,20 @@ const API_URL = 'http://localhost:3001/api';
 function Home() {
   const navigate = useNavigate();
   const [animate, setAnimate] = useState(false);
-  const [filters, setFilters] = useState({ mark: '', model: '', yearFrom: '', yearTo: '', priceFrom: '', priceTo: '', city: '' });
+  const [filters, setFilters] = useState({ type: '', model: '', yearFrom: '', yearTo: '', priceFrom: '', priceTo: '', city: '' });
+  const [activeVehicleCategory, setActiveVehicleCategory] = useState('car');
+  const [availableModels, setAvailableModels] = useState([]);
   const [latestVehicles, setLatestVehicles] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
+
+  const vehicleData = {
+    car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
+    van: { marks: ['Mercedes-Benz', 'Fiat', 'Opel', 'Renault', 'Iveco'], models: { 'Mercedes-Benz': ['Sprinter', 'Vito'], 'Fiat': ['Ducato', 'Doblo'], 'Opel': ['Vivaro', 'Movano'], 'Renault': ['Trafic', 'Master'], 'Iveco': ['Daily'] } },
+    motorcycle: { marks: ['Honda', 'Yamaha', 'Suzuki', 'Ducati', 'KTM'], models: { 'Honda': ['CBR', 'Africa Twin'], 'Yamaha': ['MT-07', 'R1'], 'Suzuki': ['GSX-R', 'V-Strom'], 'Ducati': ['Panigale', 'Monster'], 'KTM': ['Duke', 'Adventure'] } }
+  };
 
   const fetchLatestVehicles = useCallback(async () => {
     try {
@@ -37,7 +45,6 @@ function Home() {
   useEffect(() => {
     fetchLatestVehicles();
     fetchReviews();
-
     const handleScroll = () => {
         const imageText = document.querySelector('.image-text');
         if (imageText) {
@@ -48,7 +55,6 @@ function Home() {
             }
         }
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [fetchLatestVehicles, fetchReviews]);
@@ -57,11 +63,20 @@ function Home() {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleMarkChange = (e) => {
+    const mark = e.target.value;
+    setFilters(prev => ({ ...prev, type: mark, model: '' }));
+    setAvailableModels(vehicleData[activeVehicleCategory].models[mark] || []);
+  };
+
   const handleSearch = () => {
     const queryParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
+    queryParams.append('category', activeVehicleCategory);
+    for (const [key, value] of Object.entries(filters)) {
+      if (value) {
+        queryParams.append(key, value);
+      }
+    }
     navigate(`/vehicle-ads?${queryParams.toString()}`);
   };
 
@@ -81,6 +96,7 @@ function Home() {
 
   return (
     <div className="home-container">
+        
         <div className="image-container">
             <img src={homeImage} alt="Family in a car" className="home-image" />
             <div className={`image-text ${animate ? 'animate' : ''}`}>
@@ -91,9 +107,14 @@ function Home() {
 
         <div className="overlay-box">
             <div className="search-form">
+                <div className="vehicle-tabs">
+                    <button className={`tab-btn ${activeVehicleCategory === 'car' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('car')}>🚗 Car</button>
+                    <button className={`tab-btn ${activeVehicleCategory === 'van' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('van')}>🚐 Van</button>
+                    <button className={`tab-btn ${activeVehicleCategory === 'motorcycle' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('motorcycle')}>🏍️ Motorcycle</button>
+                </div>
                 <div className="form-row">
-                    <div className="form-group"><label>Mark</label><input type="text" value={filters.mark} onChange={(e) => handleFilterChange('mark', e.target.value)} /></div>
-                    <div className="form-group"><label>Model</label><input type="text" value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} /></div>
+                    <div className="form-group"><label>Mark</label><select value={filters.type} onChange={handleMarkChange}><option value="">Select Mark</option>{vehicleData[activeVehicleCategory].marks.map(mark => (<option key={mark} value={mark}>{mark}</option>))}</select></div>
+                    <div className="form-group"><label>Model</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">Select Model</option>{availableModels.map(model => (<option key={model} value={model}>{model}</option>))}</select></div>
                 </div>
                 <div className="form-row">
                     <div className="form-group range-group"><label>Year</label><div className="range-inputs"><input type="text" placeholder="From" value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="text" placeholder="To" value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
@@ -110,7 +131,7 @@ function Home() {
             <h2 className="fjale">Latest Cars</h2>
             <div className="car-grid">
                 {latestVehicles.map(vehicle => (
-                    <div className="car-card" key={vehicle.id}>
+                    <div className="car-card" key={vehicle.id} onClick={() => navigate(`/vehicle-ads?vehicleId=${vehicle.id}`)}>
                         <div className="car-image-placeholder" style={{ backgroundImage: `url(${vehicle.imageUrl || 'https://via.placeholder.com/300x200'})`, backgroundSize: 'cover' }}></div>
                         <div className="car-details">
                             <p className="car-price">€{vehicle.price.toLocaleString()}</p>

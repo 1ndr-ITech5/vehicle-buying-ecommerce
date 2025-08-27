@@ -26,8 +26,7 @@ router.get('/', async (req, res) => {
     if (carMark) where.carMark = carMark;
     if (location) where.location = location;
     if (condition) {
-        const conditions = Array.isArray(condition) ? condition : [condition];
-        where.condition = { in: conditions };
+        where.condition = { in: condition.split(',') };
     }
 
     if (year) where.year = { gte: parseInt(year) };
