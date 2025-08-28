@@ -15,7 +15,7 @@ CREATE TABLE "VehicleAd" (
     "year" INTEGER NOT NULL,
     "price" REAL NOT NULL,
     "mileage" INTEGER NOT NULL,
-    "transmission" TEXT NOT NULL,
+    "transmission" TEXT,
     "fuel" TEXT NOT NULL,
     "color" TEXT NOT NULL,
     "location" TEXT NOT NULL,
@@ -25,6 +25,7 @@ CREATE TABLE "VehicleAd" (
     "power" INTEGER NOT NULL,
     "engine" TEXT NOT NULL,
     "carPlates" TEXT NOT NULL,
+    "package" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "ownerId" TEXT NOT NULL,
     CONSTRAINT "VehicleAd_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -33,7 +34,8 @@ CREATE TABLE "VehicleAd" (
 -- CreateTable
 CREATE TABLE "PartCategory" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL
+    "name" TEXT NOT NULL,
+    "icon" TEXT
 );
 
 -- CreateTable

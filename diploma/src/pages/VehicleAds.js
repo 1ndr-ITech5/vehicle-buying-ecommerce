@@ -1,9 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 import axios from 'axios';
 import './../pagestyle/VehicleAds.css';
 
 const API_URL = 'http://localhost:3001/api';
+
+const InsuranceCalculator = ({ baseRate }) => {
+  const [age, setAge] = useState('');
+  const [experience, setExperience] = useState('');
+  const [crashed, setCrashed] = useState('no');
+  const [insurance, setInsurance] = useState(null);
+
+  const calculateInsurance = () => {
+    let calculatedInsurance = baseRate;
+    if (age < 25) {
+      calculatedInsurance *= 1.5;
+    }
+    if (experience < 2) {
+      calculatedInsurance *= 1.5;
+    }
+    if (crashed === 'yes') {
+      calculatedInsurance *= 2;
+    }
+    setInsurance(calculatedInsurance.toFixed(2));
+  };
+
+  return (
+    <div className="insurance-calculator-section">
+      <h3>Insurance Calculator</h3>
+      <div className="form-group">
+        <label>Age</label>
+        <input type="number" value={age} onChange={(e) => setAge(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Years of Experience</label>
+        <input type="number" value={experience} onChange={(e) => setExperience(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Crashed Before?</label>
+        <select value={crashed} onChange={(e) => setCrashed(e.target.value)}>
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </div>
+      <button onClick={calculateInsurance}>Calculate</button>
+      {insurance && <div className="calculated-insurance">Estimated Insurance: €{insurance} / year</div>}
+    </div>
+  );
+};
+
+const HistoryCheck = ({ history }) => {
+  const getIcon = (status) => {
+    switch (status) {
+      case 'passed':
+        return <FaCheckCircle color="green" />;
+      case 'questionable':
+        return <FaQuestionCircle color="orange" />;
+      case 'failed':
+        return <FaTimesCircle color="red" />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="history-check-section">
+      <h3>History Check</h3>
+      <ul>
+        {history && Object.entries(history).map(([key, value]) => (
+          <li key={key}>
+            <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            {getIcon(value)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const ReservationModal = ({ vehicle, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <h3>Reserve {vehicle.name}</h3>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="input-group">
+            <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
+          </div>
+          <div className="input-group">
+            <input type="tel" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
+          </div>
+          <div className="input-group">
+            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+          </div>
+          <button type="submit" className="modal-submit">Confirm Reservation</button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const VehicleAds = () => {
   const location = useLocation();
@@ -14,7 +124,12 @@ const VehicleAds = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [savedSearches, setSavedSearches] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [allVehicles, setAllVehicles] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [searched, setSearched] = useState(false);
+  const [searchAfterUpdate, setSearchAfterUpdate] = useState(false);
+  const [installments, setInstallments] = useState(0);
+  const [showReserveModal, setShowReserveModal] = useState(false);
 
   const vehicleData = {
     car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
@@ -27,52 +142,49 @@ const VehicleAds = () => {
   const colourOptions = ['Black', 'White', 'Silver', 'Blue', 'Red', 'Green', 'Yellow'];
   const albanianCities = ['Tirana', 'Durres', 'Vlora', 'Shkoder', 'Fier', 'Korce', 'Elbasan', 'Berat', 'Lushnje', 'Kavaje', 'Gjirokaster', 'Sarande'];
 
-  const fetchVehicles = async () => {
+  const fetchAllVehicles = async () => {
     try {
-      const params = { ...filters, sortBy, vehicleCategory: activeVehicleCategory };
-      const response = await axios.get(`${API_URL}/vehicles`, { params });
-      setVehicles(response.data);
-      setTotalPages(Math.ceil(response.data.length / 8));
+      const response = await axios.get('/db.json');
+      setAllVehicles(response.data.vehicles);
+      setVehicles(response.data.vehicles);
+      setTotalPages(Math.ceil(response.data.vehicles.length / 8));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
   };
 
-  const fetchVehicleById = async (id) => {
-    try {
-      const response = await axios.get(`${API_URL}/vehicles/${id}`);
-      setSelectedVehicle(response.data);
-    } catch (error) {
-      console.error("Error fetching vehicle:", error);
-    }
-  };
+  useEffect(() => {
+    fetchAllVehicles();
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const vehicleId = params.get('vehicleId');
-    if (vehicleId) {
-      fetchVehicleById(vehicleId);
-    } else {
-      const newFilters = {};
-      for (const [key, value] of params.entries()) {
-        if (key === 'category') {
-          setActiveVehicleCategory(value);
-        } else {
-          newFilters[key] = value;
-        }
+    const queryFilters = {};
+    let category = activeVehicleCategory;
+    let shouldSearch = false;
+    for (const [key, value] of params.entries()) {
+      if (key === 'category') {
+        category = value;
+        shouldSearch = true;
+      } else if (value) {
+        queryFilters[key] = value;
+        shouldSearch = true;
       }
-      setFilters(prev => ({ ...prev, ...newFilters }));
     }
-  }, [location.search]);
+
+    if (shouldSearch) {
+      setActiveVehicleCategory(category);
+      setFilters(prev => ({ ...prev, ...queryFilters }));
+      setSearchAfterUpdate(true);
+    }
+  }, [location.search, allVehicles]);
 
   useEffect(() => {
-    fetchVehicles();
-  }, [sortBy, activeVehicleCategory]);
-
-  useEffect(() => {
-    const loadedSearches = JSON.parse(localStorage.getItem('vehicleSearches') || '[]');
-    setSavedSearches(loadedSearches);
-  }, []);
+    if (searchAfterUpdate) {
+      handleSearch();
+      setSearchAfterUpdate(false);
+    }
+  }, [searchAfterUpdate, filters]);
 
   const handleFilterChange = (filterName, value) => {
     let processedValue = value;
@@ -123,6 +235,104 @@ const VehicleAds = () => {
     localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
   };
 
+  const handleSearch = React.useCallback(() => {
+    let filteredVehicles = [...allVehicles];
+    // Filtering
+    if (filters.type) {
+        filteredVehicles = filteredVehicles.filter(v => v.make === filters.type);
+    }
+    if (filters.model) {
+        filteredVehicles = filteredVehicles.filter(v => v.model === filters.model);
+    }
+    if (filters.yearFrom) {
+        filteredVehicles = filteredVehicles.filter(v => v.year >= filters.yearFrom);
+    }
+    if (filters.yearTo) {
+        filteredVehicles = filteredVehicles.filter(v => v.year <= filters.yearTo);
+    }
+    if (filters.priceFrom) {
+        filteredVehicles = filteredVehicles.filter(v => v.price >= filters.priceFrom);
+    }
+    if (filters.priceTo) {
+        filteredVehicles = filteredVehicles.filter(v => v.price <= filters.priceTo);
+    }
+    if (filters.powerFrom) {
+        filteredVehicles = filteredVehicles.filter(v => v.power >= filters.powerFrom);
+    }
+    if (filters.powerTo) {
+        filteredVehicles = filteredVehicles.filter(v => v.power <= filters.powerTo);
+    }
+    if (filters.mileageFrom) {
+        filteredVehicles = filteredVehicles.filter(v => v.mileage >= filters.mileageFrom);
+    }
+    if (filters.mileageTo) {
+        filteredVehicles = filteredVehicles.filter(v => v.mileage <= filters.mileageTo);
+    }
+    if (filters.transmitor) {
+        filteredVehicles = filteredVehicles.filter(v => v.transmission === filters.transmitor);
+    }
+    if (filters.fuel) {
+        filteredVehicles = filteredVehicles.filter(v => v.fuel === filters.fuel);
+    }
+    if (filters.colour) {
+        filteredVehicles = filteredVehicles.filter(v => v.color === filters.colour);
+    }
+    if (filters.location) {
+        filteredVehicles = filteredVehicles.filter(v => v.location === filters.location);
+    }
+    if (activeVehicleCategory) {
+        filteredVehicles = filteredVehicles.filter(v => v.vehicleCategory === activeVehicleCategory);
+    }
+
+    // Sorting
+    if (sortBy === 'price_asc') {
+        filteredVehicles.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price_desc') {
+        filteredVehicles.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'year_asc') {
+        filteredVehicles.sort((a, b) => a.year - b.year);
+    } else if (sortBy === 'year_desc') {
+        filteredVehicles.sort((a, b) => b.year - a.year);
+    } else if (sortBy === 'recent') {
+        filteredVehicles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    setVehicles(filteredVehicles);
+    setTotalPages(Math.ceil(filteredVehicles.length / 8));
+    setCurrentPage(1);
+    setSearched(true);
+  }, [allVehicles, filters, activeVehicleCategory, sortBy]);
+
+  useEffect(() => {
+    if(allVehicles.length > 0) {
+        handleSearch();
+    }
+  }, [sortBy, allVehicles, handleSearch]);
+
+  const handleReserveClick = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to reserve a vehicle.');
+      return;
+    }
+    setShowReserveModal(true);
+  };
+
+  const handleReservationSubmit = async (formData) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(`${API_URL}/vehicles/${selectedVehicle.id}/reserve`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Reservation successful!');
+      setShowReserveModal(false);
+      fetchAllVehicles(); // Refetch vehicles to update reserved status
+      setSelectedVehicle({ ...selectedVehicle, reserved: true });
+    } catch (error) {
+      alert(error.response?.data?.message || 'Reservation failed.');
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -146,7 +356,7 @@ const VehicleAds = () => {
             {activeVehicleCategory !== 'motorcycle' && <div className="filter-group"><label>Gearbox</label><select value={filters.transmitor} onChange={(e) => handleFilterChange('transmitor', e.target.value)}><option value="">Select Gearbox</option>{transmitorOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>}
             <div className="filter-group"><label>Fuel</label><select value={filters.fuel} onChange={(e) => handleFilterChange('fuel', e.target.value)}><option value="">Select Fuel</option>{fuelOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>
             <div className="filter-group range-filter"><label>Mileage</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.mileageFrom} onChange={(e) => handleFilterChange('mileageFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.mileageTo} onChange={(e) => handleFilterChange('mileageTo', e.target.value)} /></div></div>
-            <button className="search-button" onClick={fetchVehicles}>Search</button>
+            <button className="search-button" onClick={handleSearch}>Search</button>
             <div className="saved-searches-section">
                 <button className="save-search-button" onClick={handleSaveSearch}>Save Search</button>
                 {savedSearches.length > 0 && <h4>Saved Searches</h4>}
@@ -174,8 +384,9 @@ const VehicleAds = () => {
               <span className="results-count">{vehicles.length} results</span>
             </div>
             <div className="vehicle-cards">
-              {vehicles.slice((currentPage - 1) * 8, currentPage * 8).map(vehicle => (
-                <div key={vehicle.id} className="vehicle-card" onClick={() => setSelectedVehicle(vehicle)}>
+              {(searched ? vehicles : allVehicles).slice((currentPage - 1) * 8, currentPage * 8).map(vehicle => (
+                <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? 'This vehicle is reserved' : ''}>
+                  {vehicle.reserved && <div className="reserved-badge">Reserved</div>}
                   <div className="vehicle-image"><img src={vehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={vehicle.name} /></div>
                   <div className="vehicle-info">
                     <div className="vehicle-price">€{vehicle.price.toLocaleString()}</div>
@@ -200,13 +411,28 @@ const VehicleAds = () => {
           <div className="detail-content">
             <div className="detail-left">
                 <div className="spec-section"><h2>Vehicle Specifications</h2><div className="spec-grid"><div className="spec-item"><span className="spec-label">Make:</span><span className="spec-value">{selectedVehicle.make}</span></div><div className="spec-item"><span className="spec-label">Model:</span><span className="spec-value">{selectedVehicle.model}</span></div><div className="spec-item"><span className="spec-label">Year:</span><span className="spec-value">{selectedVehicle.year}</span></div><div className="spec-item"><span className="spec-label">Engine:</span><span className="spec-value">{selectedVehicle.engine}</span></div><div className="spec-item"><span className="spec-label">Fuel:</span><span className="spec-value">{selectedVehicle.fuel}</span></div><div className="spec-item"><span className="spec-label">Mileage:</span><span className="spec-value">{selectedVehicle.mileage.toLocaleString()} km</span></div><div className="spec-item"><span className="spec-label">Gearbox:</span><span className="spec-value">{selectedVehicle.transmission}</span></div><div className="spec-item"><span className="spec-label">Colour:</span><span className="spec-value">{selectedVehicle.color}</span></div><div className="spec-item"><span className="spec-label">Car Plates:</span><span className="spec-value">{selectedVehicle.carPlates}</span></div><div className="spec-item"><span className="spec-label">Power:</span><span className="spec-value">{selectedVehicle.power} HP</span></div></div></div>
-                <div className="price-section"><div className="main-price">€{selectedVehicle.price.toLocaleString()}</div></div>
-                <div className="description-section"><h3>Description</h3><p>{selectedVehicle.description}</p></div>
+                <div className="price-section">
+                  <div className="main-price">€{selectedVehicle.price.toLocaleString()}</div>
+                  <div className="installments-section">
+                    <span>Pay by installments:</span>
+                    <div className="installment-options">
+                      <button onClick={() => setInstallments(3)}>3 months</button>
+                      <button onClick={() => setInstallments(6)}>6 months</button>
+                      <button onClick={() => setInstallments(9)}>9 months</button>
+                    </div>
+                    {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
+                  </div>
+                  {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
+                </div>
+                {selectedVehicle.description && <div className="description-section"><h3>Description</h3><p>{selectedVehicle.description}</p></div>}
             </div>
             <div className="detail-right">
-                <div className="seller-section"><h3>Seller Information</h3><div className="seller-info"><div className="seller-item"><span className="seller-label">Phone:</span><span className="seller-value">{selectedVehicle.phone}</span></div><div className="seller-item"><span className="seller-label">Location:</span><span className="seller-value">{selectedVehicle.location}</span></div></div></div>
+                <div className="seller-section"><h3>Seller Information</h3><div className="seller-info"><div className="seller-item"><span className="spec-label">Phone:</span><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><span className="spec-label">Location:</span><span className="spec-value">{selectedVehicle.location}</span></div></div></div>
+                {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
+                {selectedVehicle.insuranceBaseRate && <InsuranceCalculator baseRate={selectedVehicle.insuranceBaseRate} />}
             </div>
           </div>
+          {showReserveModal && <ReservationModal vehicle={selectedVehicle} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
         </div>
       )}
     </div>

@@ -66,7 +66,11 @@ function Home() {
   const handleMarkChange = (e) => {
     const mark = e.target.value;
     setFilters(prev => ({ ...prev, type: mark, model: '' }));
-    setAvailableModels(vehicleData[activeVehicleCategory].models[mark] || []);
+    if (mark) {
+      setAvailableModels(vehicleData[activeVehicleCategory].models[mark] || []);
+    } else {
+      setAvailableModels([]);
+    }
   };
 
   const handleSearch = () => {

@@ -14,6 +14,7 @@ model User {
   createdAt     DateTime  @default(now())
   vehicleAds    VehicleAd[]
   partAds       PartAd[]
+  reservations  Reservation[]
 }
 
 model VehicleAd {
@@ -34,10 +35,14 @@ model VehicleAd {
   power         Int
   engine        String
   carPlates     String
+  package       String
   createdAt     DateTime  @default(now())
   
   owner         User      @relation(fields: [ownerId], references: [id])
   ownerId       String
+
+  reserved      Boolean   @default(false)
+  reservations  Reservation[]
 }
 
 model PartCategory {
@@ -85,4 +90,18 @@ model Review {
   rating    Int
   comment   String
   createdAt DateTime @default(now())
+}
+
+model Reservation {
+  id              String    @id @default(cuid())
+  name            String
+  phone           String
+  email           String
+  createdAt       DateTime  @default(now())
+
+  vehicle         VehicleAd @relation(fields: [vehicleId], references: [id])
+  vehicleId       String
+
+  user            User      @relation(fields: [userId], references: [id])
+  userId          String
 }

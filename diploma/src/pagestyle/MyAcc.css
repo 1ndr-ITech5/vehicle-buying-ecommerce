@@ -846,3 +846,18 @@
     font-size: 28px;
   }
 }
+
+.ad-card-myacc.premium {
+    border: 2px solid gold;
+}
+
+.premium-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: gold;
+    color: black;
+    padding: 5px 10px;
+    font-weight: bold;
+    border-radius: 5px;
+}
