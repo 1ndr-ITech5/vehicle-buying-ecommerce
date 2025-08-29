@@ -186,6 +186,17 @@ const VehicleAds = () => {
     }
   }, [searchAfterUpdate, filters]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const vehicleId = params.get('vehicleId');
+    if (vehicleId && allVehicles.length > 0) {
+      const vehicle = allVehicles.find(v => v.id === parseInt(vehicleId));
+      if (vehicle) {
+        setSelectedVehicle(vehicle);
+      }
+    }
+  }, [location.search, allVehicles]);
+
   const handleFilterChange = (filterName, value) => {
     let processedValue = value;
     if (filterName === 'yearFrom' || filterName === 'yearTo') {

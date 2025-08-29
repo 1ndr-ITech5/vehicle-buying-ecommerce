@@ -154,35 +154,53 @@
     gap: 30px;
 }
 
-.part-item {
-    border: none;
+.part-card {
+    display: flex;
+    background-color: #ffffff;
     border-radius: 15px;
     padding: 20px;
     cursor: pointer;
-    background-color: #ffffff;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease-in-out;
+    gap: 20px;
 }
 
-.part-item:hover {
+.part-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+}
+
+.part-image-placeholder {
+    width: 150px;
+    height: 150px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+}
+
+.part-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.part-name {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.part-vehicle-info {
+    font-size: 1em;
+    color: #7f8c8d;
 }
 
 .part-price {
     font-weight: bold;
     color: #e74c3c;
     font-size: 1.5em;
-    margin-bottom: 10px;
 }
 
-.part-name {
-    font-size: 1.3em;
-    margin: 10px 0;
-    color: #2c3e50;
-}
-
-.part-location {
+.part-location-phone {
     color: #7f8c8d;
 }
 

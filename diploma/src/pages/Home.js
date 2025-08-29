@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './../pagestyle/Home.css';
 import homeImage from './../assets/jokic.avif';
+import NewVehicles from './../components/NewVehicles';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -148,6 +149,8 @@ function Home() {
                 ))}
             </div>
         </div>
+
+        <NewVehicles />
 
         <div className="reviews-section">
             <h2>Customer Reviews</h2>

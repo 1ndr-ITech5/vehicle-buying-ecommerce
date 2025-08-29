@@ -406,13 +406,19 @@ const Spare = () => {
             <div className="parts-list" style={{ flex: '65%' }}>
                 <h2>{selectedSubCategory.name}</h2>
                 <p>{parts.length} parts found</p>
-                {parts.map(part => (
-                    <div key={part.id} className="part-item" onClick={() => handlePartClick(part)}>
-                        <div className="part-price">€{part.price}</div>
-                        <div className="part-name">{part.name}</div>
-                        <div className="part-location">{part.location} • {part.phone}</div>
-                    </div>
-                ))}
+                <div className="part-cards">
+                    {parts.map(part => (
+                        <div key={part.id} className="part-card" onClick={() => handlePartClick(part)}>
+                            <div className="part-image-placeholder"></div>
+                            <div className="part-details">
+                                <div className="part-name">{part.name}</div>
+                                <div className="part-vehicle-info">{`${part.vehicleType} - ${part.carMark} ${part.carModel}`}</div>
+                                <div className="part-price">€{part.price}</div>
+                                <div className="part-location-phone">{`${part.location} • ${part.phone}`}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
