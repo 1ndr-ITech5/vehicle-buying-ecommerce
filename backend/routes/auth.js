@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -17,10 +18,11 @@ router.post('/register', async (req, res) => {
     }
 
     try {
+        const encryptedEmail = encrypt(email);
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
-                email,
+                email: encryptedEmail,
                 password: hashedPassword,
             },
         });
@@ -42,9 +44,8 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const user = await prisma.user.findUnique({
-            where: { email },
-        });
+        const users = await prisma.user.findMany();
+        const user = users.find(u => u.email && decrypt(u.email) === email);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -56,7 +57,8 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+        const decryptedEmail = decrypt(user.email);
+        const token = jwt.sign({ userId: user.id, email: decryptedEmail }, JWT_SECRET, {
             expiresIn: '1h', // Token expires in 1 hour
         });
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './../pagestyle/MyAcc.css';
+import VehicleForm from './../components/VehicleForm';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -15,6 +16,9 @@ const MyAcc = () => {
   const [adType, setAdType] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
   const [showPayment, setShowPayment] = useState(false);
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [vehicleFormData, setVehicleFormData] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({ cardNumber: '', expiry: '', cvv: '', cardholderName: '' });
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ email: '', password: '', confirmPassword: '' });
@@ -36,6 +40,12 @@ const MyAcc = () => {
   const handleLoginChange = (field, value) => setLoginForm(prev => ({ ...prev, [field]: value }));
   const handleRegisterChange = (field, value) => setRegisterForm(prev => ({ ...prev, [field]: value }));
   const handleResetChange = (field, value) => setResetForm(prev => ({ ...prev, [field]: value }));
+  const handlePaymentChange = (field, value) => setPaymentForm(prev => ({ ...prev, [field]: value }));
+
+  const isPaymentFormValid = () => {
+    const { cardNumber, expiry, cvv, cardholderName } = paymentForm;
+    return cardNumber && expiry && cvv && cardholderName;
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -73,8 +83,64 @@ const MyAcc = () => {
   };
 
   const handleAdTypeSelection = (type) => setAdType(type);
-  const handlePackageSelection = (packageType) => { setSelectedPackage(packageType); setShowPayment(true); };
-  const handlePayment = () => { alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully!`); setShowPayment(false); setCurrentView('welcome'); setAdType(''); setSelectedPackage(''); };
+  const handlePackageSelection = (packageType) => { setSelectedPackage(packageType); setShowVehicleForm(true); };
+  const handleVehicleFormSubmit = (formData) => {
+    setVehicleFormData(formData);
+    setShowVehicleForm(false);
+    setShowPayment(true);
+  };
+
+  const handleVehicleFormBack = () => {
+    setShowVehicleForm(false);
+    setSelectedPackage('');
+  };
+
+  const handlePayment = async () => {
+    console.log('handlePayment function called');
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
+    console.log('Vehicle Form Data:', vehicleFormData);
+
+    if (!vehicleFormData || !token) {
+      console.log('Exiting handlePayment because vehicleFormData or token is missing.');
+      alert('Something went wrong. Please try again.');
+      return;
+    }
+
+    try {
+      console.log('Sending request to create vehicle ad...');
+      const { category, ...dataToSend } = vehicleFormData;
+      const response = await axios.post(`${API_URL}/vehicles`,
+        { ...dataToSend, packageType: selectedPackage },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log('Request successful:', response.data);
+      alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
+      setShowPayment(false);
+      setAdType('');
+      setSelectedPackage('');
+      setVehicleFormData(null);
+      navigate('/vehicle-ads', { state: { newAd: response.data } });
+    } catch (error) {
+      console.error('Error creating vehicle ad:', error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response:', error.response);
+        const errorMessage = error.response.data.message || 'Failed to create vehicle ad.';
+        const detailedError = error.response.data.error || '';
+        alert(`${errorMessage}\n${detailedError}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+        alert('Failed to create vehicle ad. The server is not responding. Please make sure the backend server is running.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+        alert(`Failed to create vehicle ad. An error occurred: ${error.message}`);
+      }
+    }
+  };
 
   const getPackageFeatures = (adType, packageType) => {
     const packages = {
@@ -130,8 +196,10 @@ const MyAcc = () => {
         <div className="ad-type-selection"><h2>Choose Ad Type</h2><div className="ad-type-options"><div className="ad-type-card" onClick={() => handleAdTypeSelection('vehicle')}><div className="ad-type-icon">🚗</div><h3>Vehicle Ad</h3><p>Sell your car, motorcycle, or other vehicles</p></div><div className="ad-type-card" onClick={() => handleAdTypeSelection('spareparts')}><div className="ad-type-icon">🔧</div><h3>Spare Parts Ad</h3><p>Sell automotive parts and accessories</p></div></div><button className="back-btn" onClick={() => setCurrentView('welcome')}>← Back to Welcome</button></div>
       ) : !selectedPackage ? (
         <div className="package-selection"><h2>Choose Your Package for {adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</h2><div className="packages"><div className="package-card standard"><div className="package-header"><h3>Standard</h3><div className="price">€2</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'standard').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn" onClick={() => handlePackageSelection('standard')}>Choose Standard</button></div><div className="package-card premium"><div className="package-header"><h3>Premium</h3><div className="price">€5</div><div className="popular">Most Popular</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'premium').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn premium-btn" onClick={() => handlePackageSelection('premium')}>Choose Premium</button></div></div><button className="back-btn" onClick={() => setAdType('')}>← Back to Ad Type</button></div>
+      ) : showVehicleForm ? (
+        <VehicleForm selectedPackage={selectedPackage} adType={adType} onFormSubmit={handleVehicleFormSubmit} onBack={handleVehicleFormBack} />
       ) : showPayment ? (
-        <div className="payment-section"><h2>Payment</h2><div className="payment-summary"><div className="summary-item"><span>Ad Type:</span><span>{adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</span></div><div className="summary-item"><span>Package:</span><span>{selectedPackage === 'standard' ? 'Standard' : 'Premium'}</span></div><div className="summary-item total"><span>Total:</span><span>€{selectedPackage === 'standard' ? '2' : '5'}</span></div></div><div className="payment-form"><h3>Payment Details</h3><div className="input-group"><input type="text" placeholder="Card Number" /></div><div className="input-row"><div className="input-group"><input type="text" placeholder="MM/YY" /></div><div className="input-group"><input type="text" placeholder="CVV" /></div></div><div className="input-group"><input type="text" placeholder="Cardholder Name" /></div></div><div className="payment-actions"><button className="payment-btn" onClick={handlePayment}>Pay €{selectedPackage === 'standard' ? '2' : '5'}</button><button className="back-btn" onClick={() => setShowPayment(false)}>← Back to Packages</button></div></div>
+        <div className="payment-section"><h2>Payment</h2><div className="payment-summary"><div className="summary-item"><span>Ad Type:</span><span>{adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</span></div><div className="summary-item"><span>Package:</span><span>{selectedPackage === 'standard' ? 'Standard' : 'Premium'}</span></div><div className="summary-item total"><span>Total:</span><span>€{selectedPackage === 'standard' ? '2' : '5'}</span></div></div><div className="payment-form"><h3>Payment Details</h3><div className="input-group"><input type="text" placeholder="Card Number" value={paymentForm.cardNumber} onChange={(e) => handlePaymentChange('cardNumber', e.target.value)} required /></div><div className="input-row"><div className="input-group"><input type="text" placeholder="MM/YY" value={paymentForm.expiry} onChange={(e) => handlePaymentChange('expiry', e.target.value)} required /></div><div className="input-group"><input type="text" placeholder="CVV" value={paymentForm.cvv} onChange={(e) => handlePaymentChange('cvv', e.target.value)} required /></div></div><div className="input-group"><input type="text" placeholder="Cardholder Name" value={paymentForm.cardholderName} onChange={(e) => handlePaymentChange('cardholderName', e.target.value)} required /></div></div><div className="payment-actions"><button className="payment-btn" onClick={handlePayment} disabled={!isPaymentFormValid()}>Pay €{selectedPackage === 'standard' ? '2' : '5'}</button><button className="back-btn" onClick={() => {setShowPayment(false); setShowVehicleForm(true);}}>← Back to Form</button></div></div>
       ) : null}
     </div>
   );

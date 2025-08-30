@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom"; // ✅ import Link
+import { Link } from "react-router-dom";
 import "./../compstyle/TopHeader.css";
 
 export default function TopHeader() {
@@ -7,7 +7,7 @@ export default function TopHeader() {
   const [open, setOpen] = useState(false);
 
   const handleLanguageChange = (lang) => {
-    setLanguage(lang);
+    setLanguage(lang); 
     setOpen(false);
   };
 
@@ -33,7 +33,7 @@ export default function TopHeader() {
               }
               alt="flag"
             />
-            <span>{language === "AL" ? "Shqip" : "English"}</span>
+            <span>{language === "AL" ?  "Shqip" : "English"}</span>
             <i className={`fas fa-chevron-down arrow ${open ? "up" : ""}`}></i>
           </button>
 

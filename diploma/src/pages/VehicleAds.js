@@ -142,20 +142,32 @@ const VehicleAds = () => {
   const colourOptions = ['Black', 'White', 'Silver', 'Blue', 'Red', 'Green', 'Yellow'];
   const albanianCities = ['Tirana', 'Durres', 'Vlora', 'Shkoder', 'Fier', 'Korce', 'Elbasan', 'Berat', 'Lushnje', 'Kavaje', 'Gjirokaster', 'Sarande'];
 
-  const fetchAllVehicles = async () => {
+  const fetchAllVehicles = React.useCallback(async () => {
     try {
       const response = await axios.get('/db.json');
-      setAllVehicles(response.data.vehicles);
-      setVehicles(response.data.vehicles);
-      setTotalPages(Math.ceil(response.data.vehicles.length / 8));
+      let vehiclesFromDb = response.data.vehicles;
+
+      if (location.state?.newAd) {
+        const newAd = location.state.newAd;
+        // Avoid adding duplicates
+        if (!vehiclesFromDb.find(v => v.id === newAd.id)) {
+          vehiclesFromDb = [newAd, ...vehiclesFromDb];
+        }
+        // Clear the state to prevent re-adding
+        window.history.replaceState({}, document.title)
+      }
+
+      setAllVehicles(vehiclesFromDb);
+      setVehicles(vehiclesFromDb);
+      setTotalPages(Math.ceil(vehiclesFromDb.length / 8));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
-  };
+  }, [location.state]);
 
   useEffect(() => {
     fetchAllVehicles();
-  }, []);
+  }, [fetchAllVehicles]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

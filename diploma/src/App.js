@@ -11,17 +11,19 @@ import Footer from "./components/Footer";
 function App() {
   return (
     <Router>
-      <div>
-        <TopHeader />
-        <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/vehicle-ads" element={<VehicleAds />} />
-          <Route path="/spare-parts" element={<Spare />} />
-          <Route path="/my-account" element={<MyAcc />} />
-        </Routes>
-        <Footer />
-      </div>
+      
+        <div>
+          <TopHeader />
+          <Header />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/vehicle-ads" element={<VehicleAds />} />
+            <Route path="/spare-parts" element={<Spare />} />
+            <Route path="/my-account" element={<MyAcc />} />
+          </Routes>
+          <Footer />
+        </div>
+      
     </Router>
   );
 }

@@ -29,7 +29,7 @@ router.post('/', authenticateToken, async (req, res) => {
         power: parseInt(power),
         engine,
         carPlates,
-        package: packageType,
+        "package": packageType,
         owner: { connect: { id: ownerId } },
       },
     });

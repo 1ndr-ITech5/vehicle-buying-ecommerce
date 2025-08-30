@@ -294,6 +294,34 @@ const Spare = () => {
         setSelectedPart(part);
     };
 
+    const [showReserveModal, setShowReserveModal] = useState(false);
+
+    const handleReserveClick = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please log in to reserve a part.');
+            return;
+        }
+        setShowReserveModal(true);
+    };
+
+    const handleReservationSubmit = async (formData) => {
+        const token = localStorage.getItem('token');
+        try {
+            // This is a mock API call, as there is no backend endpoint for part reservation.
+            // In a real application, you would make a POST request to your API.
+            console.log("Reserving part:", selectedPart.id, "with data:", formData);
+            alert('Reservation successful!');
+            setShowReserveModal(false);
+            // Update the part's reserved status locally.
+            const updatedParts = parts.map(p => p.id === selectedPart.id ? { ...p, reserved: true } : p);
+            setParts(updatedParts);
+            setSelectedPart({ ...selectedPart, reserved: true });
+        } catch (error) {
+            alert('Reservation failed.');
+        }
+    };
+
     const renderCategories = () => {
         const leftColumn = categories.slice(0, 5);
         const rightColumn = categories.slice(5, 10);
@@ -424,18 +452,70 @@ const Spare = () => {
     );
 
     const renderPartDetail = () => (
-        <div>
+        <div className="part-detail-view">
             <button onClick={() => setSelectedPart(null)}>← Back to Parts</button>
-            <div className="part-detail">
-                <h2>{selectedPart.name}</h2>
-                <p>Price: €{selectedPart.price}</p>
-                <p>Condition: {selectedPart.condition}</p>
-                <p>Location: {selectedPart.location}</p>
-                <p>Contact: {selectedPart.phone}</p>
-                {selectedPart.description && <p>Description: {selectedPart.description}</p>}
+            <div style={{ display: 'flex', marginTop: '20px' }}>
+                <div className="part-detail-left" style={{ flex: '40%', paddingRight: '20px' }}>
+                    <h2>{selectedPart.name}</h2>
+                    <p>Condition: {selectedPart.condition}</p>
+                    <p>Quantity: {selectedPart.quantity}</p>
+                    <p>Location: {selectedPart.location}</p>
+                    <p>Price: €{selectedPart.price}</p>
+                    <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>
+                    <div className="description-section">
+                        <h3>Description</h3>
+                        <p>{selectedPart.description}</p>
+                    </div>
+                    <div className="seller-section">
+                        <h3>Seller Information</h3>
+                        <p>Name: {selectedPart.sellerName}</p>
+                        <p>Email: {selectedPart.sellerEmail}</p>
+                        <p>Contact: {selectedPart.phone}</p>
+                    </div>
+                </div>
+                <div className="part-detail-right" style={{ flex: '60%' }}>
+                    <img src={selectedPart.imageUrl} alt={selectedPart.name} style={{ width: '100%', borderRadius: '15px' }} />
+                </div>
             </div>
+            {showReserveModal && <ReservationModal part={selectedPart} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
         </div>
     );
+
+    const ReservationModal = ({ part, onClose, onSubmit }) => {
+        const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
+
+        const handleChange = (e) => {
+            setFormData({ ...formData, [e.target.name]: e.target.value });
+        };
+
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            onSubmit(formData);
+        };
+
+        return (
+            <div className="modal-overlay">
+                <div className="modal">
+                    <div className="modal-header">
+                        <h3>Reserve {part.name}</h3>
+                        <button className="close-btn" onClick={onClose}>×</button>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="input-group">
+                            <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
+                        </div>
+                        <div className="input-group">
+                            <input type="tel" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
+                        </div>
+                        <div className="input-group">
+                            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+                        </div>
+                        <button type="submit" className="modal-submit">Confirm Reservation</button>
+                    </form>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="spare-page">
