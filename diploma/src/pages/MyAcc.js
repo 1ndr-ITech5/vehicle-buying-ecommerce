@@ -18,6 +18,7 @@ const MyAcc = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [vehicleFormData, setVehicleFormData] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ cardNumber: '', expiry: '', cvv: '', cardholderName: '' });
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -84,8 +85,9 @@ const MyAcc = () => {
 
   const handleAdTypeSelection = (type) => setAdType(type);
   const handlePackageSelection = (packageType) => { setSelectedPackage(packageType); setShowVehicleForm(true); };
-  const handleVehicleFormSubmit = (formData) => {
+  const handleVehicleFormSubmit = (formData, image) => {
     setVehicleFormData(formData);
+    setImageFile(image);
     setShowVehicleForm(false);
     setShowPayment(true);
   };
@@ -96,49 +98,49 @@ const MyAcc = () => {
   };
 
   const handlePayment = async () => {
-    console.log('handlePayment function called');
     const token = localStorage.getItem('token');
-    console.log('Token:', token);
-    console.log('Vehicle Form Data:', vehicleFormData);
-
     if (!vehicleFormData || !token) {
-      console.log('Exiting handlePayment because vehicleFormData or token is missing.');
       alert('Something went wrong. Please try again.');
       return;
     }
 
+    let imageUrl = '';
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      try {
+        const uploadResponse = await axios.post(`${API_URL}/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        imageUrl = uploadResponse.data.imageUrl;
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Failed to upload image. Please try again.');
+        return;
+      }
+    }
+
     try {
-      console.log('Sending request to create vehicle ad...');
       const { category, ...dataToSend } = vehicleFormData;
-      const response = await axios.post(`${API_URL}/vehicles`,
-        { ...dataToSend, packageType: selectedPackage },
+      const response = await axios.post(
+        `${API_URL}/vehicles`,
+        { ...dataToSend, packageType: selectedPackage, imageUrl },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Request successful:', response.data);
       alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
       setShowPayment(false);
       setAdType('');
       setSelectedPackage('');
       setVehicleFormData(null);
+      setImageFile(null);
       navigate('/vehicle-ads', { state: { newAd: response.data } });
     } catch (error) {
       console.error('Error creating vehicle ad:', error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error response:', error.response);
-        const errorMessage = error.response.data.message || 'Failed to create vehicle ad.';
-        const detailedError = error.response.data.error || '';
-        alert(`${errorMessage}\n${detailedError}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
-        alert('Failed to create vehicle ad. The server is not responding. Please make sure the backend server is running.');
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-        alert(`Failed to create vehicle ad. An error occurred: ${error.message}`);
-      }
+      alert('Failed to create vehicle ad. Please try again.');
     }
   };
 

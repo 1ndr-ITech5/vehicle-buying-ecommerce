@@ -16,20 +16,24 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack }) => {
     location: '',
     phone: '',
     description: '',
-    imageUrl: '',
     power: '',
     engine: '',
     carPlates: '',
     category: '',
   });
+  const [image, setImage] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onFormSubmit(formData);
+    onFormSubmit(formData, image);
   };
 
   const isPremium = selectedPackage === 'premium';
@@ -83,7 +87,7 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack }) => {
         <input type="text" name="location" placeholder="Location" onChange={handleChange} required />
         <input type="text" name="phone" placeholder="Phone Number" onChange={handleChange} required />
         <textarea name="description" placeholder="Description" onChange={handleChange} required maxLength={isPremium ? undefined : 80} />
-        <input type="text" name="imageUrl" placeholder="Image URL" onChange={handleChange} />
+        <input type="file" name="image" onChange={handleImageChange} />
         
         <div className="form-buttons">
           <button type="button" className="back-btn" onClick={onBack}>Go Back</button>
