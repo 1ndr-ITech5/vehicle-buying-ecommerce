@@ -8,7 +8,10 @@ const router = express.Router();
 // Create a new vehicle ad
 router.post('/', authenticateToken, async (req, res) => {
   const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, packageType } = req.body;
-  const ownerId = req.user.id;
+  const ownerId = req.user.userId;
+
+  const parsedMileage = parseInt(mileage);
+  const parsedPower = parseInt(power);
 
   try {
     const newVehicleAd = await prisma.vehicleAd.create({
@@ -18,7 +21,7 @@ router.post('/', authenticateToken, async (req, res) => {
         model,
         year: parseInt(year),
         price: parseFloat(price),
-        mileage: parseInt(mileage),
+        mileage: isNaN(parsedMileage) ? null : parsedMileage,
         transmission,
         fuel,
         color,
@@ -26,7 +29,7 @@ router.post('/', authenticateToken, async (req, res) => {
         phone,
         description,
         imageUrl,
-        power: parseInt(power),
+        power: isNaN(parsedPower) ? null : parsedPower,
         engine,
         carPlates,
         "package": packageType,
@@ -41,7 +44,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // Get vehicle ads for the logged-in user
 router.get('/my-ads', authenticateToken, async (req, res) => {
-  const ownerId = req.user.id;
+  const ownerId = req.user.userId;
 
   try {
     const vehicleAds = await prisma.vehicleAd.findMany({
@@ -129,7 +132,7 @@ router.get('/:id', async (req, res) => {
 router.post('/:id/reserve', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { name, phone, email } = req.body;
-  const userId = req.user.id;
+  const userId = req.user.userId;
 
   try {
     const vehicle = await prisma.vehicleAd.findUnique({ where: { id } });

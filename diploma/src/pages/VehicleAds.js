@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 import axios from 'axios';
+import api from './../api';
 import './../pagestyle/VehicleAds.css';
-
-const API_URL = 'http://localhost:3001/api';
 
 const InsuranceCalculator = ({ baseRate }) => {
   const [age, setAge] = useState('');
@@ -144,22 +143,40 @@ const VehicleAds = () => {
 
   const fetchAllVehicles = React.useCallback(async () => {
     try {
-      const response = await axios.get('/db.json');
-      let vehiclesFromDb = response.data.vehicles;
+      console.log('Fetching vehicles...');
+      // Fetch from db.json using the global axios instance
+      const dbJsonResponse = await axios.get('/db.json');
+      const vehiclesFromDbJson = dbJsonResponse.data.vehicles || [];
+      console.log('Vehicles from db.json:', vehiclesFromDbJson);
+
+      // Fetch from API using the configured api instance
+      const apiResponse = await api.get('/vehicles');
+      const vehiclesFromApi = apiResponse.data || [];
+      console.log('Vehicles from API:', vehiclesFromApi);
+
+      // Merge and remove duplicates (API data takes precedence)
+      const allVehiclesMap = new Map();
+      vehiclesFromDbJson.forEach(vehicle => allVehiclesMap.set(vehicle.id, vehicle));
+      vehiclesFromApi.forEach(vehicle => allVehiclesMap.set(vehicle.id, vehicle));
+
+      let mergedVehicles = Array.from(allVehiclesMap.values());
+      console.log('Merged vehicles:', mergedVehicles);
 
       if (location.state?.newAd) {
         const newAd = location.state.newAd;
+        console.log('New ad from location state:', newAd);
         // Avoid adding duplicates
-        if (!vehiclesFromDb.find(v => v.id === newAd.id)) {
-          vehiclesFromDb = [newAd, ...vehiclesFromDb];
+        if (!mergedVehicles.find(v => v.id === newAd.id)) {
+            mergedVehicles = [newAd, ...mergedVehicles];
+            console.log('Merged vehicles after adding new ad:', mergedVehicles);
         }
         // Clear the state to prevent re-adding
         window.history.replaceState({}, document.title)
       }
 
-      setAllVehicles(vehiclesFromDb);
-      setVehicles(vehiclesFromDb);
-      setTotalPages(Math.ceil(vehiclesFromDb.length / 8));
+      setAllVehicles(mergedVehicles);
+      setVehicles(mergedVehicles);
+      setTotalPages(Math.ceil(mergedVehicles.length / 8));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
@@ -333,7 +350,7 @@ const VehicleAds = () => {
   }, [sortBy, allVehicles, handleSearch]);
 
   const handleReserveClick = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       alert('Please log in to reserve a vehicle.');
       return;
@@ -342,11 +359,8 @@ const VehicleAds = () => {
   };
 
   const handleReservationSubmit = async (formData) => {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(`${API_URL}/vehicles/${selectedVehicle.id}/reserve`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`/vehicles/${selectedVehicle.id}/reserve`, formData);
       alert('Reservation successful!');
       setShowReserveModal(false);
       fetchAllVehicles(); // Refetch vehicles to update reserved status

@@ -12,6 +12,7 @@ model User {
   email         String    @unique
   password      String
   createdAt     DateTime  @default(now())
+  refreshToken  String?
   vehicleAds    VehicleAd[]
   partAds       PartAd[]
   reservations  Reservation[]

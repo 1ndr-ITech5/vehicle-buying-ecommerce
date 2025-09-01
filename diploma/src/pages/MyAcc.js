@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from './../api'; // Import the new api instance
 import './../pagestyle/MyAcc.css';
 import VehicleForm from './../components/VehicleForm';
-
-const API_URL = 'http://localhost:3001/api';
 
 const MyAcc = () => {
   const navigate = useNavigate();
@@ -27,7 +25,7 @@ const MyAcc = () => {
   const [passwordValidation, setPasswordValidation] = useState({ length: false, number: false });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       setCurrentView('welcome');
     }
@@ -54,7 +52,7 @@ const MyAcc = () => {
       return alert("Passwords do not match!");
     }
     try {
-      await axios.post(`${API_URL}/auth/register`, { email: registerForm.email, password: registerForm.password });
+      await api.post('/auth/register', { email: registerForm.email, password: registerForm.password });
       alert('Registration successful! Please login.');
       setAuthMode('login');
     } catch (error) {
@@ -65,16 +63,26 @@ const MyAcc = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, loginForm);
-      localStorage.setItem('token', response.data.token);
+      const response = await api.post('/auth/login', loginForm);
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
       setCurrentView('welcome');
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed.');
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      try {
+        await api.post('/auth/logout', { token: refreshToken });
+      } catch (error) {
+        console.error('Failed to logout:', error);
+      }
+    }
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setCurrentView('auth');
   };
 
@@ -98,22 +106,15 @@ const MyAcc = () => {
   };
 
   const handlePayment = async () => {
-    const token = localStorage.getItem('token');
-    if (!vehicleFormData || !token) {
-      alert('Something went wrong. Please try again.');
-      return;
-    }
-
     let imageUrl = '';
     if (imageFile) {
       const formData = new FormData();
       formData.append('image', imageFile);
 
       try {
-        const uploadResponse = await axios.post(`${API_URL}/upload`, formData, {
+        const uploadResponse = await api.post('/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
           },
         });
         imageUrl = uploadResponse.data.imageUrl;
@@ -126,10 +127,9 @@ const MyAcc = () => {
 
     try {
       const { category, ...dataToSend } = vehicleFormData;
-      const response = await axios.post(
-        `${API_URL}/vehicles`,
-        { ...dataToSend, packageType: selectedPackage, imageUrl },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        '/vehicles',
+        { ...dataToSend, packageType: selectedPackage, imageUrl }
       );
       alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
       setShowPayment(false);
