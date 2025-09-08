@@ -126,10 +126,10 @@ const MyAcc = () => {
     }
 
     try {
-      const { category, ...dataToSend } = vehicleFormData;
+      const { category, historyCheck, sellOnCredit, ...dataToSend } = vehicleFormData;
       const response = await api.post(
         '/vehicles',
-        { ...dataToSend, packageType: selectedPackage, imageUrl }
+        { ...dataToSend, packageType: selectedPackage, imageUrl, historyCheck, sellOnCredit }
       );
       alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
       setShowPayment(false);
@@ -146,8 +146,14 @@ const MyAcc = () => {
 
   const getPackageFeatures = (adType, packageType) => {
     const packages = {
-      vehicle: { standard: ['✓ 1 picture', '✓ Vehicle name/title', '✓ Type (Car, Motorcycle, etc.)', '✓ Model', '✓ Year', '✓ Fuel type', '✓ Location', '✓ Colour', '✓ 80 characters description', '✓ 1 modification allowed', '✓ 5 days active'], premium: ['✓ Everything in Standard', '✓ Mileage', '✓ Transmission type', '✓ Engine power', '✓ Multiple pictures (up to 5)', '✓ Unlimited description length', '✓ 3 modifications allowed', '✓ 8 days active', '✓ First 3 days on top of list', '✓ Gold highlight for 3 days'] },
-      spareparts: { standard: ['✓ 1 picture', '✓ Part name/title', '✓ Part category', '✓ Compatible car models', '✓ Condition (New/Used)', '✓ Location', '✓ Part number (if available)', '✓ 80 characters description', '✓ 1 modification allowed', '✓ 5 days active'], premium: ['✓ Everything in Standard', '✓ Multiple pictures (up to 5)', '✓ Detailed compatibility list', '✓ Installation difficulty level', '✓ Warranty information', '✓ Unlimited description length', '✓ 3 modifications allowed', '✓ 8 days active', '✓ First 3 days on top of list', '✓ Gold highlight for 3 days'] }
+      vehicle: { 
+        standard: ['✓ 1 picture', '✓ Vehicle name/title', '✓ Type (Car, Motorcycle, etc.)', '✓ Model', '✓ Year', '✓ Location', '✓ Colour', '✓ Car Plates', '✓ 80 characters description', '✓ 5 days active'], 
+        premium: ['✓ Everything in Standard', '✓ Mileage', '✓ Transmission type', '✓ Engine power', '✓ Fuel type', '✓ Multiple pictures (up to 5)', '✓ 240 characters description', '✓ 1 modification allowed', '✓ 8 days active', '✓ Gold highlight'] 
+      },
+      spareparts: { 
+        standard: ['✓ 1 picture', '✓ Part name/title', '✓ Part category', '✓ Compatible car models', '✓ Condition (New/Used)', '✓ Location', '✓ Part number (if available)', '✓ 80 characters description', '✓ 5 days active'], 
+        premium: ['✓ Everything in Standard', '✓ Multiple pictures (up to 5)', '✓ Detailed compatibility list', '✓ Installation difficulty level', '✓ Warranty information', '✓ Unlimited description length', '✓ 1 modification allowed', '✓ 8 days active', '✓ Gold highlight'] 
+      }
     };
     return packages[adType]?.[packageType] || [];
   };
@@ -197,7 +203,7 @@ const MyAcc = () => {
       {!adType ? (
         <div className="ad-type-selection"><h2>Choose Ad Type</h2><div className="ad-type-options"><div className="ad-type-card" onClick={() => handleAdTypeSelection('vehicle')}><div className="ad-type-icon">🚗</div><h3>Vehicle Ad</h3><p>Sell your car, motorcycle, or other vehicles</p></div><div className="ad-type-card" onClick={() => handleAdTypeSelection('spareparts')}><div className="ad-type-icon">🔧</div><h3>Spare Parts Ad</h3><p>Sell automotive parts and accessories</p></div></div><button className="back-btn" onClick={() => setCurrentView('welcome')}>← Back to Welcome</button></div>
       ) : !selectedPackage ? (
-        <div className="package-selection"><h2>Choose Your Package for {adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</h2><div className="packages"><div className="package-card standard"><div className="package-header"><h3>Standard</h3><div className="price">€2</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'standard').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn" onClick={() => handlePackageSelection('standard')}>Choose Standard</button></div><div className="package-card premium"><div className="package-header"><h3>Premium</h3><div className="price">€5</div><div className="popular">Most Popular</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'premium').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn premium-btn" onClick={() => handlePackageSelection('premium')}>Choose Premium</button></div></div><button className="back-btn" onClick={() => setAdType('')}>← Back to Ad Type</button></div>
+        <div className="package-selection"><h2>Choose Your Package for {adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</h2><div className="packages"><div className="package-card standard"><div className="package-header"><h3>Standard</h3><div className="price">€2</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'standard').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn" onClick={() => handlePackageSelection('standard')}>Choose Standard</button></div><div className="package-card premium"><div className="package-header"><h3>Premium</h3><div className="price">€5</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'premium').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn premium-btn" onClick={() => handlePackageSelection('premium')}>Choose Premium</button></div></div><button className="back-btn" onClick={() => setAdType('')}>← Back to Ad Type</button></div>
       ) : showVehicleForm ? (
         <VehicleForm selectedPackage={selectedPackage} adType={adType} onFormSubmit={handleVehicleFormSubmit} onBack={handleVehicleFormBack} />
       ) : showPayment ? (

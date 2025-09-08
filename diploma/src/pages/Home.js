@@ -18,6 +18,24 @@ function Home() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+  const nextReview = () => {
+    setCurrentReviewIndex(prevIndex => (prevIndex + 1) % reviews.length);
+  };
+
+  const prevReview = () => {
+    setCurrentReviewIndex(prevIndex => (prevIndex - 1 + reviews.length) % reviews.length);
+  };
+
+  const getVisibleReviews = () => {
+    if (reviews.length === 0) return [];
+    const visibleReviews = [];
+    for (let i = 0; i < 3; i++) {
+      visibleReviews.push(reviews[(currentReviewIndex + i) % reviews.length]);
+    }
+    return visibleReviews;
+  };
 
   const vehicleData = {
     car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
@@ -27,8 +45,9 @@ function Home() {
 
   const fetchLatestVehicles = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/vehicles?limit=6`);
-      setLatestVehicles(response.data);
+      const response = await axios.get(`${API_URL}/vehicles`);
+      const shuffled = response.data.sort(() => 0.5 - Math.random());
+      setLatestVehicles(shuffled.slice(0, 6));
     } catch (error) {
       console.error("Error fetching latest vehicles:", error);
     }
@@ -59,6 +78,13 @@ function Home() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [fetchLatestVehicles, fetchReviews]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextReview();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [reviews]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -132,35 +158,27 @@ function Home() {
             </div>
         </div>
 
-        <div className="latest-cars-container">
-            <h2 className="fjale">Latest Cars</h2>
-            <div className="car-grid">
-                {latestVehicles.map(vehicle => (
-                    <div className="car-card" key={vehicle.id} onClick={() => navigate(`/vehicle-ads?vehicleId=${vehicle.id}`)}>
-                        <div className="car-image-placeholder" style={{ backgroundImage: `url(${vehicle.imageUrl || 'https://via.placeholder.com/300x200'})`, backgroundSize: 'cover' }}></div>
-                        <div className="car-details">
-                            <p className="car-price">€{vehicle.price.toLocaleString()}</p>
-                            <p className="car-name">{vehicle.name}</p>
-                            <p className="car-specs">{`${vehicle.year} • ${vehicle.mileage.toLocaleString()} km`}</p>
-                            <p className="car-location">{vehicle.location}</p>
-                            <p className="car-phone">{vehicle.phone}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
+        <div className="latest-text">
+          <h2>Latest Cars</h2>
         </div>
+
+        
 
         <NewVehicles />
 
         <div className="reviews-section">
             <h2>Customer Reviews</h2>
-            <div className="reviews-container">
-                {reviews.map((review) => (
-                    <div className="review-card" key={review.id}>
-                        <div className="review-header"><span className="reviewer-name">{review.name}</span><div className="star-rating">{[...Array(5)].map((_, i) => (<span key={i} className={i < review.rating ? 'star filled' : 'star'}>★</span>))}</div></div>
-                        <p className="review-comment">{review.comment}</p>
-                    </div>
-                ))}
+            <div className="reviews-carousel">
+              <button className="carousel-btn prev" onClick={prevReview}>&#10094;</button>
+              <div className="reviews-container">
+                  {getVisibleReviews().map((review, index) => (
+                      <div className="review-card" key={index}>
+                          <div className="review-header"><span className="reviewer-name">{review.name}</span><div className="star-rating">{[...Array(5)].map((_, i) => (<span key={i} className={i < review.rating ? 'star filled' : 'star'}>★</span>))}</div></div>
+                          <p className="review-comment">{review.comment}</p>
+                      </div>
+                  ))}
+              </div>
+              <button className="carousel-btn next" onClick={nextReview}>&#10095;</button>
             </div>
             <div className="review-form-container">
                 <h3>Leave a Review</h3>

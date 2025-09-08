@@ -8,94 +8,20 @@
   min-height: 100vh;
 }
 
-
-
-.road-sign {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  background-color: #fff;
-  border-radius: 50%;
-  border: 4px solid #b71c1c; /* Darker red */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #b71c1c;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.triangle-sign {
-  width: 0;
-  height: 0;
-  border-left: 35px solid transparent;
-  border-right: 35px solid transparent;
-  border-bottom: 60px solid #ffc107;
-  position: relative;
-  border-radius: 0;
-  background-color: transparent;
-  border: none;
-}
-
-.triangle-sign::before {
-  content: '';
-}
-
-.stop-sign {
-    width: 60px;
-    height: 60px;
-    background-color: #b71c1c;
-    clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
-    border-radius: 0;
-    color: white;
-    font-size: 18px;
-    line-height: 60px;
-    text-align: center;
-}
-
-.stop-sign::before {
-    content: 'STOP';
-}
-
-.yield-sign {
-    width: 0;
-    height: 0;
-    border-left: 35px solid transparent;
-    border-right: 35px solid transparent;
-    border-top: 60px solid #fff;
-    border-bottom: 0;
-    background-color: transparent;
-    border-radius: 0;
-    border: 4px solid #b71c1c;
-}
-
-.yield-sign::before {
-    content: 'YIELD';
-    position: absolute;
-    top: -40px;
-    left: -25px;
-    width: 50px;
-    text-align: center;
-    color: #b71c1c;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.sign-left-1 { top: 150px; left: -80px; }
-.sign-left-2 { top: 300px; left: -80px; }
-.sign-right-1 { top: 200px; right: -80px; }
-.sign-right-2 { top: 400px; right: -80px; }
-
-.sign-left-1::before { content: '80'; font-size: 24px; }
-
-
-
-
-
 .image-container {
     position: relative;
     height: 80vh;
     width: 100%;
+}
+
+.image-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .home-image { width: 100%; height: 100%; object-fit: cover; }
@@ -109,6 +35,7 @@
     opacity: 0;
     transform: translate(-50%, -40%);
     transition: opacity 1s ease-out, transform 1s ease-out;
+    z-index: 1;
 }
 
 .image-text.animate { opacity: 1; transform: translate(-50%, -50%); }
@@ -206,8 +133,55 @@
 /* Reviews Section */
 .reviews-section { width: 80%; margin: 40px auto 20px; background: black; color: white; padding: 40px; border-radius: 15px; }
 .reviews-section h2 { text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: #f39c12; font-weight: 700; }
-.reviews-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px; }
-.review-card { background-color: #222; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+
+.reviews-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reviews-container-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.reviews-container {
+  display: flex;
+  width: 100%;
+  gap: 25px;
+}
+
+.review-card {
+  flex: 0 0 33.333%;
+  padding: 25px;
+  box-sizing: border-box;
+  background-color: #222; 
+  border-radius: 10px; 
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 1rem;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.carousel-btn.prev {
+  left: -30px;
+}
+
+.carousel-btn.next {
+  right: -30px;
+}
+
+
 .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
 .reviewer-name { font-weight: bold; font-size: 1.2rem; color: #ecf0f1; }
 .star-rating { display: flex; }
@@ -246,7 +220,7 @@
 }
 
 .new-car-card {
-  background-color: #f9f9f9;
+  background-color: #cacaca;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
@@ -263,21 +237,22 @@
 .new-car-image-placeholder {
   width: 100%;
   flex-grow: 1;
-  background-color: #e0e_e0;
+  background-color: #170e0e;
 }
 
 .new-car-details {
   padding: 1rem;
   text-align: center;
+  color:#170e0e;
 }
 
 .new-car-price {
   font-weight: bold;
-  font-size: 1.2rem;
-  color: #e53935;
+  font-size: 1.3rem;
+  color: #ff8c00;
 }
 
 .new-car-name {
-  font-size: 1rem;
-  margin: 0.5rem 0 0;
+  font-size: 1.2rem;
+  margin: 1rem 0;
 }

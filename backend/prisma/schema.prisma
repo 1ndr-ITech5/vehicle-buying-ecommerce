@@ -44,6 +44,8 @@ model VehicleAd {
 
   reserved      Boolean   @default(false)
   reservations  Reservation[]
+  historyCheck  Json?
+  sellOnCredit  Boolean   @default(false)
 }
 
 model PartCategory {

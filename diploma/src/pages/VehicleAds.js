@@ -162,29 +162,30 @@ const VehicleAds = () => {
       let mergedVehicles = Array.from(allVehiclesMap.values());
       console.log('Merged vehicles:', mergedVehicles);
 
-      if (location.state?.newAd) {
-        const newAd = location.state.newAd;
-        console.log('New ad from location state:', newAd);
-        // Avoid adding duplicates
-        if (!mergedVehicles.find(v => v.id === newAd.id)) {
-            mergedVehicles = [newAd, ...mergedVehicles];
-            console.log('Merged vehicles after adding new ad:', mergedVehicles);
-        }
-        // Clear the state to prevent re-adding
-        window.history.replaceState({}, document.title)
-      }
-
       setAllVehicles(mergedVehicles);
       setVehicles(mergedVehicles);
       setTotalPages(Math.ceil(mergedVehicles.length / 8));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
-  }, [location.state]);
+  }, []);
 
   useEffect(() => {
     fetchAllVehicles();
   }, [fetchAllVehicles]);
+
+  useEffect(() => {
+    if (location.state?.newAd) {
+      const newAd = location.state.newAd;
+      setAllVehicles(prevVehicles => {
+        if (!prevVehicles.find(v => v.id === newAd.id)) {
+          return [newAd, ...prevVehicles];
+        }
+        return prevVehicles;
+      });
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state?.newAd]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -208,12 +209,7 @@ const VehicleAds = () => {
     }
   }, [location.search, allVehicles]);
 
-  useEffect(() => {
-    if (searchAfterUpdate) {
-      handleSearch();
-      setSearchAfterUpdate(false);
-    }
-  }, [searchAfterUpdate, filters]);
+  
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -275,7 +271,7 @@ const VehicleAds = () => {
     localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
   };
 
-  const handleSearch = React.useCallback(() => {
+  const handleSearch = () => {
     let filteredVehicles = [...allVehicles];
     // Filtering
     if (filters.type) {
@@ -324,30 +320,35 @@ const VehicleAds = () => {
         filteredVehicles = filteredVehicles.filter(v => v.vehicleCategory === activeVehicleCategory);
     }
 
-    // Sorting
-    if (sortBy === 'price_asc') {
-        filteredVehicles.sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price_desc') {
-        filteredVehicles.sort((a, b) => b.price - a.price);
-    } else if (sortBy === 'year_asc') {
-        filteredVehicles.sort((a, b) => a.year - b.year);
-    } else if (sortBy === 'year_desc') {
-        filteredVehicles.sort((a, b) => b.year - a.year);
-    } else if (sortBy === 'recent') {
-        filteredVehicles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
     setVehicles(filteredVehicles);
     setTotalPages(Math.ceil(filteredVehicles.length / 8));
     setCurrentPage(1);
     setSearched(true);
-  }, [allVehicles, filters, activeVehicleCategory, sortBy]);
+  };
 
   useEffect(() => {
-    if(allVehicles.length > 0) {
-        handleSearch();
+    const sortedVehicles = [...vehicles].sort((a, b) => {
+      if (sortBy === 'price_asc') {
+        return a.price - b.price;
+      }
+      if (sortBy === 'price_desc') {
+        return b.price - a.price;
+      }
+      if (sortBy === 'year_asc') {
+        return a.year - b.year;
+      }
+      if (sortBy === 'year_desc') {
+        return b.year - a.year;
+      }
+      if (sortBy === 'recent') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return 0;
+    });
+    if (JSON.stringify(sortedVehicles) !== JSON.stringify(vehicles)) {
+      setVehicles(sortedVehicles);
     }
-  }, [sortBy, allVehicles, handleSearch]);
+  }, [sortBy, vehicles]);
 
   const handleReserveClick = () => {
     const token = localStorage.getItem('accessToken');
@@ -450,23 +451,29 @@ const VehicleAds = () => {
                 <div className="spec-section"><h2>Vehicle Specifications</h2><div className="spec-grid"><div className="spec-item"><span className="spec-label">Make:</span><span className="spec-value">{selectedVehicle.make}</span></div><div className="spec-item"><span className="spec-label">Model:</span><span className="spec-value">{selectedVehicle.model}</span></div><div className="spec-item"><span className="spec-label">Year:</span><span className="spec-value">{selectedVehicle.year}</span></div><div className="spec-item"><span className="spec-label">Engine:</span><span className="spec-value">{selectedVehicle.engine}</span></div><div className="spec-item"><span className="spec-label">Fuel:</span><span className="spec-value">{selectedVehicle.fuel}</span></div><div className="spec-item"><span className="spec-label">Mileage:</span><span className="spec-value">{selectedVehicle.mileage.toLocaleString()} km</span></div><div className="spec-item"><span className="spec-label">Gearbox:</span><span className="spec-value">{selectedVehicle.transmission}</span></div><div className="spec-item"><span className="spec-label">Colour:</span><span className="spec-value">{selectedVehicle.color}</span></div><div className="spec-item"><span className="spec-label">Car Plates:</span><span className="spec-value">{selectedVehicle.carPlates}</span></div><div className="spec-item"><span className="spec-label">Power:</span><span className="spec-value">{selectedVehicle.power} HP</span></div></div></div>
                 <div className="price-section">
                   <div className="main-price">€{selectedVehicle.price.toLocaleString()}</div>
-                  <div className="installments-section">
-                    <span>Pay by installments:</span>
-                    <div className="installment-options">
-                      <button onClick={() => setInstallments(3)}>3 months</button>
-                      <button onClick={() => setInstallments(6)}>6 months</button>
-                      <button onClick={() => setInstallments(9)}>9 months</button>
+                  <div className="price-actions">
+                    <div className={`installments-section ${!selectedVehicle.sellOnCredit ? 'disabled' : ''}`}>
+                      <span>Pay by installments:</span>
+                      <div className="installment-options">
+                        <button onClick={() => setInstallments(3)} disabled={!selectedVehicle.sellOnCredit}>3 months</button>
+                        <button onClick={() => setInstallments(6)} disabled={!selectedVehicle.sellOnCredit}>6 months</button>
+                        <button onClick={() => setInstallments(9)} disabled={!selectedVehicle.sellOnCredit}>9 months</button>
+                      </div>
+                      {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
+                      {!selectedVehicle.sellOnCredit && <div className="credit-not-offered">The seller does not offer this vehicle on credit.</div>}
                     </div>
-                    {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
+                    {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
                   </div>
-                  {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
                 </div>
+                {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
                 {selectedVehicle.description && <div className="description-section"><h3>Description</h3><p>{selectedVehicle.description}</p></div>}
+                <div className="seller-section"><h3>Seller Information</h3><div className="seller-info"><div className="seller-item"><span className="spec-label">Phone:</span><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><span className="spec-label">Location:</span><span className="spec-value">{selectedVehicle.location}</span></div></div></div>
             </div>
             <div className="detail-right">
-                <div className="seller-section"><h3>Seller Information</h3><div className="seller-info"><div className="seller-item"><span className="spec-label">Phone:</span><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><span className="spec-label">Location:</span><span className="spec-value">{selectedVehicle.location}</span></div></div></div>
-                {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
-                {selectedVehicle.insuranceBaseRate && <InsuranceCalculator baseRate={selectedVehicle.insuranceBaseRate} />}
+              <div className="vehicle-image-detail">
+                <img src={selectedVehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={selectedVehicle.name} />
+              </div>
+              {selectedVehicle.insuranceBaseRate && <InsuranceCalculator baseRate={selectedVehicle.insuranceBaseRate} />}
             </div>
           </div>
           {showReserveModal && <ReservationModal vehicle={selectedVehicle} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
