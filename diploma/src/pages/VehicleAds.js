@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 import axios from 'axios';
+import VehicleForm from './../components/VehicleForm';
 import api from './../api';
 import './../pagestyle/VehicleAds.css';
 
@@ -129,6 +130,64 @@ const VehicleAds = () => {
   const [searchAfterUpdate, setSearchAfterUpdate] = useState(false);
   const [installments, setInstallments] = useState(0);
   const [showReserveModal, setShowReserveModal] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserId(payload.userId);
+      } catch (error) {
+        console.error('Invalid token:', error);
+      }
+    }
+  }, []);
+
+  const isOwner = (vehicle) => {
+    return vehicle.ownerId === userId;
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this ad?')) {
+      try {
+        await api.delete(`/vehicles/${id}`);
+        setAllVehicles(prevVehicles => prevVehicles.filter(v => v.id !== id));
+        setVehicles(prevVehicles => prevVehicles.filter(v => v.id !== id));
+      } catch (error) {
+        alert(error.response?.data?.message || 'Failed to delete ad.');
+      }
+    }
+  };
+
+  const handleModify = (vehicle) => {
+    if (vehicle.package === 'premium' && vehicle.modifiedOnce) {
+      alert('This premium ad has already been modified once.');
+      return;
+    }
+    setEditingVehicle(vehicle);
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = async (formData, image) => {
+    try {
+      // TODO: Handle image upload if the image is changed
+      const { ...dataToSend } = formData;
+      const response = await api.put(`/vehicles/${editingVehicle.id}`, dataToSend);
+      alert('Ad updated successfully!');
+      setShowEditModal(false);
+      setEditingVehicle(null);
+      // Update the vehicle in the list
+      setAllVehicles(prevVehicles => prevVehicles.map(v => v.id === editingVehicle.id ? response.data : v));
+      setVehicles(prevVehicles => prevVehicles.map(v => v.id === editingVehicle.id ? response.data : v));
+    } catch (error) {
+      console.error('Error updating vehicle ad:', error);
+      alert('Failed to update vehicle ad. Please try again.');
+    }
+  };
 
   const vehicleData = {
     car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
@@ -241,36 +300,6 @@ const VehicleAds = () => {
     setFilters(prev => ({ ...prev, [filterName]: processedValue }));
   };
 
-  const handleVehicleCategoryChange = (category) => {
-    setActiveVehicleCategory(category);
-    const newFilters = { ...filters, type: '', model: '' };
-    if (category === 'motorcycle') {
-      newFilters.transmitor = '';
-    }
-    setFilters(newFilters);
-  };
-
-  const handleSaveSearch = () => {
-    const searchName = prompt("Enter a name for this search:");
-    if (searchName) {
-        const newSearch = { name: searchName, filters, vehicleCategory: activeVehicleCategory };
-        const updatedSearches = [...savedSearches, newSearch];
-        setSavedSearches(updatedSearches);
-        localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
-    }
-  };
-
-  const handleLoadSearch = (searchToLoad) => {
-    setActiveVehicleCategory(searchToLoad.vehicleCategory);
-    setFilters(searchToLoad.filters);
-  };
-
-  const handleDeleteSearch = (indexToDelete) => {
-    const updatedSearches = savedSearches.filter((_, index) => index !== indexToDelete);
-    setSavedSearches(updatedSearches);
-    localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
-  };
-
   const handleSearch = () => {
     let filteredVehicles = [...allVehicles];
     // Filtering
@@ -324,6 +353,37 @@ const VehicleAds = () => {
     setTotalPages(Math.ceil(filteredVehicles.length / 8));
     setCurrentPage(1);
     setSearched(true);
+  };
+
+  useEffect(() => {
+    if (allVehicles.length > 0) {
+        handleSearch();
+    }
+  }, [activeVehicleCategory]);
+
+  const handleVehicleCategoryChange = (category) => {
+    setActiveVehicleCategory(category);
+  };
+
+  const handleSaveSearch = () => {
+    const searchName = prompt("Enter a name for this search:");
+    if (searchName) {
+        const newSearch = { name: searchName, filters, vehicleCategory: activeVehicleCategory };
+        const updatedSearches = [...savedSearches, newSearch];
+        setSavedSearches(updatedSearches);
+        localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
+    }
+  };
+
+  const handleLoadSearch = (searchToLoad) => {
+    setActiveVehicleCategory(searchToLoad.vehicleCategory);
+    setFilters(searchToLoad.filters);
+  };
+
+  const handleDeleteSearch = (indexToDelete) => {
+    const updatedSearches = savedSearches.filter((_, index) => index !== indexToDelete);
+    setSavedSearches(updatedSearches);
+    localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
   };
 
   useEffect(() => {
@@ -395,6 +455,7 @@ const VehicleAds = () => {
             <div className="filter-group"><label>Fuel</label><select value={filters.fuel} onChange={(e) => handleFilterChange('fuel', e.target.value)}><option value="">Select Fuel</option>{fuelOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>
             <div className="filter-group range-filter"><label>Mileage</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.mileageFrom} onChange={(e) => handleFilterChange('mileageFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.mileageTo} onChange={(e) => handleFilterChange('mileageTo', e.target.value)} /></div></div>
             <button className="search-button" onClick={handleSearch}>Search</button>
+            
             <div className="saved-searches-section">
                 <button className="save-search-button" onClick={handleSaveSearch}>Save Search</button>
                 {savedSearches.length > 0 && <h4>Saved Searches</h4>}
@@ -431,6 +492,12 @@ const VehicleAds = () => {
                     <div className="vehicle-name">{vehicle.name}</div>
                     <div className="vehicle-details">{vehicle.year} • {vehicle.mileage.toLocaleString()} km • {vehicle.transmission} • {vehicle.fuel}</div>
                     <div className="vehicle-location-phone">{vehicle.location} • {vehicle.phone}</div>
+                    {isOwner(vehicle) && (
+                      <div className="ad-actions">
+                        <button onClick={(e) => {e.stopPropagation(); handleModify(vehicle)}}>Modify</button>
+                        <button onClick={(e) => {e.stopPropagation(); handleDelete(vehicle.id)}}>Delete</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -477,6 +544,23 @@ const VehicleAds = () => {
             </div>
           </div>
           {showReserveModal && <ReservationModal vehicle={selectedVehicle} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
+        </div>
+      )}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Edit Vehicle Ad</h3>
+              <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <VehicleForm
+              selectedPackage={editingVehicle.package}
+              adType="vehicle"
+              onFormSubmit={handleUpdate}
+              onBack={() => setShowEditModal(false)}
+              initialData={editingVehicle}
+            />
+          </div>
         </div>
       )}
     </div>

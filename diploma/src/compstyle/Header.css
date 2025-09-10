@@ -43,3 +43,8 @@
 .nav-links a.active {
   color: red;
 }
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}

@@ -7,9 +7,11 @@ const router = express.Router();
 
 // Create a new vehicle ad
 router.post('/', authenticateToken, async (req, res) => {
-  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, packageType } = req.body;
+  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType } = req.body;
   const ownerId = req.user.userId;
 
+  const parsedYear = parseInt(year);
+  const parsedPrice = parseFloat(price);
   const parsedMileage = parseInt(mileage);
   const parsedPower = parseInt(power);
 
@@ -19,9 +21,9 @@ router.post('/', authenticateToken, async (req, res) => {
         name,
         make,
         model,
-        year: parseInt(year),
-        price: parseFloat(price),
-        mileage: isNaN(parsedMileage) ? null : parsedMileage,
+        year: isNaN(parsedYear) ? 0 : parsedYear,
+        price: isNaN(parsedPrice) ? 0 : parsedPrice,
+        mileage: isNaN(parsedMileage) ? 0 : parsedMileage,
         transmission,
         fuel,
         color,
@@ -29,7 +31,7 @@ router.post('/', authenticateToken, async (req, res) => {
         phone,
         description,
         imageUrl,
-        power: isNaN(parsedPower) ? null : parsedPower,
+        power: isNaN(parsedPower) ? 0 : parsedPower,
         engine,
         carPlates,
         "package": packageType,
@@ -161,6 +163,92 @@ router.post('/:id/reserve', authenticateToken, async (req, res) => {
     res.json({ reservation, vehicle: updatedVehicle });
   } catch (error) {
     res.status(500).json({ message: 'Error reserving vehicle', error: error.message });
+  }
+});
+
+// Delete a vehicle ad
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const ownerId = req.user.userId;
+
+  try {
+    const vehicleAd = await prisma.vehicleAd.findUnique({
+      where: { id },
+    });
+
+    if (!vehicleAd) {
+      return res.status(404).json({ message: 'Vehicle ad not found' });
+    }
+
+    if (vehicleAd.ownerId !== ownerId) {
+      return res.status(403).json({ message: 'You are not authorized to delete this ad' });
+    }
+
+    await prisma.vehicleAd.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting vehicle ad', error: error.message });
+  }
+});
+
+// Update a vehicle ad
+router.put('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const ownerId = req.user.userId;
+  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType } = req.body;
+
+  try {
+    const vehicleAd = await prisma.vehicleAd.findUnique({
+      where: { id },
+    });
+
+    if (!vehicleAd) {
+      return res.status(404).json({ message: 'Vehicle ad not found' });
+    }
+
+    if (vehicleAd.ownerId !== ownerId) {
+      return res.status(403).json({ message: 'You are not authorized to update this ad' });
+    }
+
+    if (vehicleAd.package === 'premium' && vehicleAd.modifiedOnce) {
+      return res.status(403).json({ message: 'This premium ad has already been modified once' });
+    }
+
+    const parsedYear = parseInt(year);
+    const parsedPrice = parseFloat(price);
+    const parsedMileage = parseInt(mileage);
+    const parsedPower = parseInt(power);
+
+    const updatedVehicleAd = await prisma.vehicleAd.update({
+      where: { id },
+      data: {
+        name,
+        make,
+        model,
+        year: isNaN(parsedYear) ? vehicleAd.year : parsedYear,
+        price: isNaN(parsedPrice) ? vehicleAd.price : parsedPrice,
+        mileage: isNaN(parsedMileage) ? vehicleAd.mileage : parsedMileage,
+        transmission,
+        fuel,
+        color,
+        location,
+        phone,
+        description,
+        imageUrl,
+        power: isNaN(parsedPower) ? vehicleAd.power : parsedPower,
+        engine,
+        carPlates,
+        "package": packageType,
+        modifiedOnce: vehicleAd.package === 'premium' ? true : vehicleAd.modifiedOnce,
+      },
+    });
+
+    res.json(updatedVehicleAd);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating vehicle ad', error: error.message });
   }
 });
 

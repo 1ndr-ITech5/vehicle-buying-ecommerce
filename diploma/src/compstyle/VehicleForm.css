@@ -26,14 +26,30 @@
   background: #fff;
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+.form-section h3 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
 }
 
-.form-row > * {
-  flex: 1;
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicle-form label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
 }
 
 .vehicle-form input[type="text"],
@@ -52,20 +68,10 @@
   min-height: 100px;
 }
 
-.history-check-section h3 {
-  margin-bottom: 1rem;
-}
-
-.vehicle-form input[name="name"] {
-  margin-bottom: 1rem;
-}
-
 .history-check-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
-  margin-right: 4rem;
 }
 
 .history-check-label {
@@ -77,19 +83,10 @@
   gap: 1rem;
 }
 
-.radio-group {
-  display: flex;
-  gap: 1rem;
-}
-
 .checkbox-group {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.seller-info-section h3 {
-  margin-bottom: 1rem;
 }
 
 .price-section {
@@ -114,10 +111,18 @@
 }
 
 .back-btn-top {
-  background: none;
-  border: none;
-  color: #007bff;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
   font-size: 1rem;
   cursor: pointer;
   margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.back-btn-top:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
 }

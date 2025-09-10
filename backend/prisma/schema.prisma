@@ -46,6 +46,7 @@ model VehicleAd {
   reservations  Reservation[]
   historyCheck  Json?
   sellOnCredit  Boolean   @default(false)
+  modifiedOnce  Boolean   @default(false)
 }
 
 model PartCategory {
