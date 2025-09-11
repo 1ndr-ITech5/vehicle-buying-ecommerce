@@ -281,6 +281,12 @@ input[type="number"] {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+.vehicle-card.premium {
+  border: 2px solid #FFD700;
+  background-color: #FFECB3;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+}
+
 .vehicle-image {
   flex: 0 0 300px;
   overflow: hidden;

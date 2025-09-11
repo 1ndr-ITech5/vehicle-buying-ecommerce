@@ -9,7 +9,7 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
           historyCheck: initialData.historyCheck || {
             accidents: 'questionable',
             stolen: 'questionable',
-            mileage: 'questionable',
+            mileage_check: 'questionable',
           },
         }
       : {
@@ -32,7 +32,7 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
           historyCheck: {
             accidents: 'questionable',
             stolen: 'questionable',
-            mileage: 'questionable',
+            mileage_check: 'questionable',
           },
         }
   );
@@ -40,7 +40,7 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === 'accidents' || name === 'stolen' || name === 'mileage') {
+    if (name === 'accidents' || name === 'stolen' || name === 'mileage_check') {
       setFormData(prev => ({
         ...prev,
         historyCheck: {
@@ -174,8 +174,8 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
             <div className="history-check-item">
               <span className="history-check-label">Mileage is correct:</span>
               <div className="radio-group">
-                <label><input type="radio" name="mileage" value="passed" checked={formData.historyCheck.mileage === 'passed'} onChange={handleChange} /> Yes</label>
-                <label><input type="radio" name="mileage" value="failed" checked={formData.historyCheck.mileage === 'failed'} onChange={handleChange} /> No</label>
+                <label><input type="radio" name="mileage_check" value="passed" checked={formData.historyCheck.mileage_check === 'passed'} onChange={handleChange} /> Yes</label>
+                <label><input type="radio" name="mileage_check" value="failed" checked={formData.historyCheck.mileage_check === 'failed'} onChange={handleChange} /> No</label>
               </div>
             </div>
           </div>

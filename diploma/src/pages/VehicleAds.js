@@ -216,7 +216,10 @@ const VehicleAds = () => {
       // Merge and remove duplicates (API data takes precedence)
       const allVehiclesMap = new Map();
       vehiclesFromDbJson.forEach(vehicle => allVehiclesMap.set(vehicle.id, vehicle));
-      vehiclesFromApi.forEach(vehicle => allVehiclesMap.set(vehicle.id, vehicle));
+      vehiclesFromApi.forEach(vehicle => {
+        vehicle.sellOnCredit = true;
+        allVehiclesMap.set(vehicle.id, vehicle)
+      });
 
       let mergedVehicles = Array.from(allVehiclesMap.values());
       console.log('Merged vehicles:', mergedVehicles);
@@ -476,7 +479,7 @@ const VehicleAds = () => {
             </div>
             <div className="vehicle-cards">
               {(searched ? vehicles : allVehicles).slice((currentPage - 1) * 8, currentPage * 8).map(vehicle => (
-                <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? 'This vehicle is reserved' : ''}>
+                <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''} ${vehicle.package === 'premium' ? 'premium' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? 'This vehicle is reserved' : ''}>
                   {vehicle.reserved && <div className="reserved-badge">Reserved</div>}
                   <div className="vehicle-image"><img src={vehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={vehicle.name} /></div>
                   <div className="vehicle-info">
@@ -511,15 +514,15 @@ const VehicleAds = () => {
                 <div className="price-section">
                   <div className="main-price">€{selectedVehicle.price.toLocaleString()}</div>
                   <div className="price-actions">
-                    <div className={`installments-section ${!selectedVehicle.sellOnCredit ? 'disabled' : ''}`}>
+                    <div className={`installments-section`}>
                       <span>Pay by installments:</span>
                       <div className="installment-options">
-                        <button onClick={() => setInstallments(3)} disabled={!selectedVehicle.sellOnCredit}>3 months</button>
-                        <button onClick={() => setInstallments(6)} disabled={!selectedVehicle.sellOnCredit}>6 months</button>
-                        <button onClick={() => setInstallments(9)} disabled={!selectedVehicle.sellOnCredit}>9 months</button>
+                        <button onClick={() => setInstallments(3)}>3 months</button>
+                        <button onClick={() => setInstallments(6)}>6 months</button>
+                        <button onClick={() => setInstallments(9)}>9 months</button>
                       </div>
                       {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
-                      {!selectedVehicle.sellOnCredit && <div className="credit-not-offered">The seller does not offer this vehicle on credit.</div>}
+                      
                     </div>
                     {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
                   </div>

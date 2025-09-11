@@ -185,12 +185,18 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to delete this ad' });
     }
 
+    // Delete all reservations associated with the vehicle ad
+    await prisma.reservation.deleteMany({
+      where: { vehicleId: id },
+    });
+
     await prisma.vehicleAd.delete({
       where: { id },
     });
 
     res.status(204).send();
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Error deleting vehicle ad', error: error.message });
   }
 });

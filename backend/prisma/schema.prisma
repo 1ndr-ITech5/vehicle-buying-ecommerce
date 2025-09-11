@@ -13,7 +13,7 @@ model User {
   password      String
   createdAt     DateTime  @default(now())
   refreshToken  String?
-  vehicleAds    VehicleAd[]
+  vehicleAds    VehicleAd[] @relation(onDelete: Cascade)
   partAds       PartAd[]
   reservations  Reservation[]
 }
@@ -104,7 +104,7 @@ model Reservation {
   email           String
   createdAt       DateTime  @default(now())
 
-  vehicle         VehicleAd @relation(fields: [vehicleId], references: [id])
+  vehicle         VehicleAd @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   vehicleId       String
 
   user            User      @relation(fields: [userId], references: [id])
