@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Create a new vehicle ad
 router.post('/', authenticateToken, async (req, res) => {
-  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType } = req.body;
+  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType, vehicleCategory } = req.body;
   const ownerId = req.user.userId;
 
   const parsedYear = parseInt(year);
@@ -35,6 +35,7 @@ router.post('/', authenticateToken, async (req, res) => {
         engine,
         carPlates,
         "package": packageType,
+        vehicleCategory,
         owner: { connect: { id: ownerId } },
       },
     });

@@ -129,7 +129,7 @@ const MyAcc = () => {
       const { category, historyCheck, sellOnCredit, ...dataToSend } = vehicleFormData;
       const response = await api.post(
         '/vehicles',
-        { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit }
+        { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit, vehicleCategory: category }
       );
       alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
       setShowPayment(false);

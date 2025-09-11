@@ -285,6 +285,7 @@
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease-out;
+  padding: 20px;
 }
 
 @keyframes fadeIn {
@@ -295,8 +296,10 @@
 .modal {
   background: white;
   border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
+  width: 800px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   animation: modalSlide 0.3s ease-out;
 }

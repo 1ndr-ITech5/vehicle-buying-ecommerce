@@ -283,14 +283,6 @@ const VehicleAds = () => {
 
   const handleFilterChange = (filterName, value) => {
     let processedValue = value;
-    if (filterName === 'yearFrom' || filterName === 'yearTo') {
-      const year = parseInt(value, 10);
-      if (year < 1990) {
-        processedValue = '1990';
-      } else if (year > 2025) {
-        processedValue = '2025';
-      }
-    }
     if (filterName === 'priceFrom' || filterName === 'priceTo') {
         const price = parseInt(value, 10);
         if (price < 0) {

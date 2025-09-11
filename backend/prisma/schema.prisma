@@ -37,6 +37,7 @@ model VehicleAd {
   engine        String
   carPlates     String
   package       String
+  vehicleCategory String
   createdAt     DateTime  @default(now())
   
   owner         User      @relation(fields: [ownerId], references: [id])
