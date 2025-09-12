@@ -206,6 +206,7 @@ const VehicleAds = () => {
       // Fetch from db.json using the global axios instance
       const dbJsonResponse = await axios.get('/db.json');
       const vehiclesFromDbJson = dbJsonResponse.data.vehicles || [];
+      vehiclesFromDbJson.forEach(vehicle => vehicle.isStatic = true);
       console.log('Vehicles from db.json:', vehiclesFromDbJson);
 
       // Fetch from API using the configured api instance
@@ -415,14 +416,23 @@ const VehicleAds = () => {
   };
 
   const handleReservationSubmit = async (formData) => {
-    try {
-      await api.post(`/vehicles/${selectedVehicle.id}/reserve`, formData);
-      alert('Reservation successful!');
-      setShowReserveModal(false);
-      fetchAllVehicles(); // Refetch vehicles to update reserved status
-      setSelectedVehicle({ ...selectedVehicle, reserved: true });
-    } catch (error) {
-      alert(error.response?.data?.message || 'Reservation failed.');
+    const updatedVehicles = allVehicles.map(v => v.id === selectedVehicle.id ? { ...v, reserved: true } : v);
+    setAllVehicles(updatedVehicles);
+    setVehicles(updatedVehicles);
+    setSelectedVehicle({ ...selectedVehicle, reserved: true });
+    alert('Vehicle reserved successfully (simulated)!');
+    setShowReserveModal(false);
+  };
+
+  const handleCancelReservation = async (vehicle) => {
+    if (window.confirm('Are you sure you want to cancel this reservation?')) {
+      const updatedVehicles = allVehicles.map(v => v.id === vehicle.id ? { ...v, reserved: false } : v);
+      setAllVehicles(updatedVehicles);
+      setVehicles(updatedVehicles);
+      if (selectedVehicle && selectedVehicle.id === vehicle.id) {
+        setSelectedVehicle({ ...selectedVehicle, reserved: false });
+      }
+      alert('Reservation cancelled successfully (simulated)!');
     }
   };
 
@@ -487,12 +497,19 @@ const VehicleAds = () => {
                     <div className="vehicle-name">{vehicle.name}</div>
                     <div className="vehicle-details">{vehicle.year} • {vehicle.mileage.toLocaleString()} km • {vehicle.transmission} • {vehicle.fuel}</div>
                     <div className="vehicle-location-phone">{vehicle.location} • {vehicle.phone}</div>
-                    {isOwner(vehicle) && (
-                      <div className="ad-actions">
-                        <button onClick={(e) => {e.stopPropagation(); handleModify(vehicle)}}>Modify</button>
-                        <button onClick={(e) => {e.stopPropagation(); handleDelete(vehicle.id)}}>Delete</button>
+                    <div className="ad-actions">
+                      <div className="ad-actions-left">
+                        {isOwner(vehicle) && (
+                          <>
+                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(vehicle)}}>Modify</button>
+                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(vehicle.id)}}>Delete</button>
+                          </>
+                        )}
                       </div>
-                    )}
+                      <div className="ad-actions-right">
+                        {vehicle.reserved && <button className="ad-action-btn cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(vehicle);}}>Cancel Reservation</button>}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

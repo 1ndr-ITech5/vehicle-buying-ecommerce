@@ -64,7 +64,8 @@
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  height: fit-content;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
   position: sticky;
   top: 20px;
 }
@@ -1059,4 +1060,56 @@ input[type="number"] {
   .detail-content {
     padding: 20px;
   }
+}
+
+.vehicle-card.reserved {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.vehicle-card.reserved .vehicle-card-main-content {
+  pointer-events: none;
+}
+
+.vehicle-card.reserved {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+.reserved-card > *:not(.ad-actions) {
+  pointer-events: none;
+}
+
+.ad-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ad-actions-left {
+  display: flex;
+  gap: 10px;
+}
+
+.ad-action-btn {
+  background-color: #27ae60; /* Green */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.ad-action-btn:hover {
+  background-color: #219a52; /* Darker Green */
+}
+
+.cancel-reservation-btn {
+  background-color: #e74c3c;
+}
+
+.cancel-reservation-btn:hover {
+  background-color: #c0392b;
 }
