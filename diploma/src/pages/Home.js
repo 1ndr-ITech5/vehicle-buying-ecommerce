@@ -6,6 +6,7 @@ import homeImage from './../assets/jokic.avif';
 import NewVehicles from './../components/NewVehicles';
 
 const API_URL = 'http://localhost:3001/api';
+const SLIDES_TO_SHOW = 3;
 
 function Home() {
   const navigate = useNavigate();
@@ -18,24 +19,73 @@ function Home() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [name, setName] = useState('');
+  const [editingReview, setEditingReview] = useState(null);
+
+  // Carousel State
+  const [currentIndex, setCurrentIndex] = useState(SLIDES_TO_SHOW);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [displayReviews, setDisplayReviews] = useState([]);
+
+  const enableCarousel = reviews.length >= SLIDES_TO_SHOW;
+
+  useEffect(() => {
+    if (reviews.length > 0 && !enableCarousel) {
+      setDisplayReviews([...reviews]);
+    } else if (enableCarousel) {
+      const slides = [
+        ...reviews.slice(-SLIDES_TO_SHOW),
+        ...reviews,
+        ...reviews.slice(0, SLIDES_TO_SHOW),
+      ];
+      setDisplayReviews(slides);
+      setCurrentIndex(SLIDES_TO_SHOW);
+    } else {
+      setDisplayReviews([]);
+    }
+  }, [reviews, enableCarousel]);
 
   const nextReview = () => {
-    setCurrentReviewIndex(prevIndex => (prevIndex + 1) % reviews.length);
+    if (!enableCarousel || isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex(prevIndex => prevIndex + 1);
   };
 
   const prevReview = () => {
-    setCurrentReviewIndex(prevIndex => (prevIndex - 1 + reviews.length) % reviews.length);
+    if (!enableCarousel || isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex(prevIndex => prevIndex - 1);
   };
 
-  const getVisibleReviews = () => {
-    if (reviews.length === 0) return [];
-    const visibleReviews = [];
-    for (let i = 0; i < 3; i++) {
-      visibleReviews.push(reviews[(currentReviewIndex + i) % reviews.length]);
+  useEffect(() => {
+    if (enableCarousel) {
+      const interval = setInterval(() => {
+        nextReview();
+      }, 5000);
+      return () => clearInterval(interval);
     }
-    return visibleReviews;
+  }, [enableCarousel, nextReview]);
+
+  const handleTransitionEnd = () => {
+    setIsTransitioning(false);
+    if (currentIndex === 0) {
+      setCurrentIndex(reviews.length);
+    } else if (currentIndex === reviews.length + SLIDES_TO_SHOW) {
+      setCurrentIndex(SLIDES_TO_SHOW);
+    }
   };
+
+  useEffect(() => {
+    if (enableCarousel) {
+      if (!isTransitioning && (currentIndex === reviews.length || currentIndex === SLIDES_TO_SHOW)) {
+      } else if (isTransitioning) {
+          const timer = setTimeout(() => {
+              setIsTransitioning(false);
+          }, 1000);
+          return () => clearTimeout(timer);
+      }
+    }
+  }, [currentIndex, isTransitioning, reviews.length, enableCarousel]);
 
   const vehicleData = {
     car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
@@ -79,13 +129,6 @@ function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [fetchLatestVehicles, fetchReviews]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      nextReview();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [reviews]);
-
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
@@ -115,9 +158,10 @@ function Home() {
     e.preventDefault();
     if (rating > 0 && comment) {
       try {
-        await axios.post(`${API_URL}/reviews`, { name: 'Anonymous User', rating, comment });
+        await axios.post(`${API_URL}/reviews`, { name: name || 'Anonymous User', rating, comment });
         setRating(0);
         setComment('');
+        setName('');
         fetchReviews();
       } catch (error) {
         console.error("Error submitting review:", error);
@@ -125,9 +169,64 @@ function Home() {
     }
   };
 
+  const handleDelete = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      try {
+        await axios.delete(`${API_URL}/reviews/${reviewId}`);
+        fetchReviews();
+      } catch (error) {
+        console.error('Error deleting review:', error);
+      }
+    }
+  };
+
+  const handleEdit = (review) => {
+    setEditingReview({ ...review });
+  };
+
+  const handleUpdateReview = async (e) => {
+    e.preventDefault();
+    if (!editingReview) return;
+    try {
+      await axios.put(`${API_URL}/reviews/${editingReview.id}`, {
+        name: editingReview.name,
+        rating: editingReview.rating,
+        comment: editingReview.comment,
+      });
+      setEditingReview(null);
+      fetchReviews();
+    } catch (error) {
+      console.error('Error updating review:', error);
+    }
+  };
+
   return (
     <div className="home-container">
-        
+        {editingReview && (
+            <div className="edit-modal">
+                <div className="edit-modal-content">
+                    <h3>Edit Review</h3>
+                    <form onSubmit={handleUpdateReview}>
+                        <div className="comment-input">
+                            <label>Name:</label>
+                            <input type="text" value={editingReview.name} onChange={(e) => setEditingReview({ ...editingReview, name: e.target.value })} />
+                        </div>
+                        <div className="comment-input">
+                            <label>Comment:</label>
+                            <textarea value={editingReview.comment} onChange={(e) => setEditingReview({ ...editingReview, comment: e.target.value })} rows="4"></textarea>
+                        </div>
+                        <div className="rating-input">
+                            <p>Rating:</p>
+                            <div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < editingReview.rating ? 'star filled' : 'star'} onClick={() => setEditingReview({ ...editingReview, rating: i + 1 })}>★</span>))}
+                            </div>
+                        </div>
+                        <button type="submit">Update Review</button>
+                        <button type="button" onClick={() => setEditingReview(null)}>Cancel</button>
+                    </form>
+                </div>
+            </div>
+        )}
+
         <div className="image-container">
             <img src={homeImage} alt="Family in a car" className="home-image" />
             <div className={`image-text ${animate ? 'animate' : ''}`}>
@@ -162,28 +261,68 @@ function Home() {
           <h2>Latest Cars</h2>
         </div>
 
-        
-
         <NewVehicles />
 
         <div className="reviews-section">
             <h2>Customer Reviews</h2>
-            <div className="reviews-carousel">
-              <button className="carousel-btn prev" onClick={prevReview}>&#10094;</button>
-              <div className="reviews-container">
-                  {getVisibleReviews().map((review, index) => (
-                      <div className="review-card" key={index}>
-                          <div className="review-header"><span className="reviewer-name">{review.name}</span><div className="star-rating">{[...Array(5)].map((_, i) => (<span key={i} className={i < review.rating ? 'star filled' : 'star'}>★</span>))}</div></div>
-                          <p className="review-comment">{review.comment}</p>
-                      </div>
-                  ))}
-              </div>
-              <button className="carousel-btn next" onClick={nextReview}>&#10095;</button>
-            </div>
+            {enableCarousel ? (
+                <div className="reviews-carousel">
+                    <button className="carousel-btn prev" onClick={prevReview} disabled={isTransitioning}>&#10094;</button>
+                    <div className="reviews-viewport">
+                        <div
+                            className="reviews-container"
+                            style={{
+                                transform: `translateX(calc(-${currentIndex * (100 / SLIDES_TO_SHOW)}% - ${currentIndex * 20}px))`,
+                                transition: isTransitioning ? 'transform 1s ease-in-out' : 'none',
+                            }}
+                            onTransitionEnd={handleTransitionEnd}
+                        >
+                            {displayReviews.map((review, index) => (
+                                <div className="review-card" key={review.id || index}>
+                                    <div className="review-card-content">
+                                        <div className="review-header">
+                                            <span className="reviewer-name">{review.name}</span>
+                                            <div className="star-rating">{[...Array(5)].map((_, i) => (<span key={i} className={i < review.rating ? 'star filled' : 'star'}>★</span>))}
+                                            </div>
+                                        </div>
+                                        <p className="review-comment">{review.comment}</p>
+                                        <div className="review-actions">
+                                            <button onClick={() => handleEdit(review)}>Edit</button>
+                                            <button onClick={() => handleDelete(review.id)}>Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <button className="carousel-btn next" onClick={nextReview} disabled={isTransitioning}>&#10095;</button>
+                </div>
+            ) : (
+                <div className="static-reviews-container">
+                    {reviews.map(review => (
+                        <div className="review-card" key={review.id}>
+                            <div className="review-card-content">
+                                <div className="review-header">
+                                    <span className="reviewer-name">{review.name}</span>
+                                    <div className="star-rating">{[...Array(5)].map((_, i) => (<span key={i} className={i < review.rating ? 'star filled' : 'star'}>★</span>))}
+                                    </div>
+                                </div>
+                                <p className="review-comment">{review.comment}</p>
+                                <div className="review-actions">
+                                    <button onClick={() => handleEdit(review)}>Edit</button>
+                                    <button onClick={() => handleDelete(review.id)}>Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
             <div className="review-form-container">
                 <h3>Leave a Review</h3>
                 <form onSubmit={handleSubmitReview} className="review-form">
-                    <div className="rating-input"><p>Your Rating:</p><div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < (hoverRating || rating) ? 'star filled' : 'star'} onClick={() => setRating(i + 1)} onMouseEnter={() => setHoverRating(i + 1)} onMouseLeave={() => setHoverRating(0)}>★</span>))}</div></div>
+                    <div className="rating-input"><p>Your Rating:</p><div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < (hoverRating || rating) ? 'star filled' : 'star'} onClick={() => setRating(i + 1)} onMouseEnter={() => setHoverRating(i + 1)} onMouseLeave={() => setHoverRating(0)}>★</span>))}
+                    </div></div>
+                    <div className="comment-input"><label htmlFor="name">Your Name (optional):</label><input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Leave blank for anonymous" /></div>
                     <div className="comment-input"><label htmlFor="comment">Your Comment:</label><textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Share your experience with us..." rows="4" required></textarea></div>
                     <button type="submit" className="submit-review-btn">Submit Review</button>
                 </form>

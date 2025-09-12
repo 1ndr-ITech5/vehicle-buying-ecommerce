@@ -40,4 +40,37 @@ router.post('/', async (req, res) => {
     }
 });
 
+// Delete a review
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.review.delete({
+            where: { id: id },
+        });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting review', error: error.message });
+    }
+});
+
+// Update a review
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, rating, comment } = req.body;
+
+    try {
+        const updatedReview = await prisma.review.update({
+            where: { id: id },
+            data: {
+                name,
+                rating: rating ? parseInt(rating) : undefined,
+                comment,
+            },
+        });
+        res.json(updatedReview);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating review', error: error.message });
+    }
+});
+
 module.exports = router;

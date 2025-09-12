@@ -136,29 +136,65 @@
 
 .reviews-carousel {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.reviews-container-wrapper {
+.reviews-carousel::before,
+.reviews-carousel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100px;
+    z-index: 2;
+    pointer-events: none; /* So they don't interfere with clicks */
+}
+
+.reviews-carousel::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+}
+
+.reviews-carousel::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+}
+
+.reviews-viewport {
   overflow: hidden;
   width: 100%;
 }
 
 .reviews-container {
   display: flex;
-  width: 100%;
-  gap: 25px;
 }
 
-.review-card {
-  flex: 0 0 33.333%;
-  padding: 25px;
+.reviews-carousel .review-card {
+  flex: 0 0 calc(100% / 3);
   box-sizing: border-box;
-  background-color: #222; 
-  border-radius: 10px; 
+  padding: 0 10px;
+}
+
+.static-reviews-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.static-reviews-container .review-card {
+  flex: 1 1 0;
+  max-width: calc(50% - 10px);
+}
+
+.static-reviews-container .review-card:only-child {
+  max-width: 66%;
+}
+
+.review-card-content {
+  background-color: #222;
+  border-radius: 10px;
+  padding: 25px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  height: 100%;
 }
 
 .carousel-btn {
@@ -170,7 +206,7 @@
   border: none;
   padding: 1rem;
   cursor: pointer;
-  z-index: 1;
+  z-index: 3; /* Make sure buttons are on top of the shadow */
 }
 
 .carousel-btn.prev {
@@ -188,6 +224,27 @@
 .star { color: #555; font-size: 1.2rem; }
 .star.filled { color: #f1c40f; }
 .review-comment { color: #bdc3c7; line-height: 1.6; font-style: italic; }
+
+.review-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.review-actions button {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.review-actions button:hover {
+    background-color: #555;
+}
+
 .review-form-container { background-color: #222; border-radius: 10px; padding: 30px; margin-top: 30px; }
 .review-form-container h3 { margin-bottom: 25px; color: #f39c12; text-align: center; font-size: 1.8rem; }
 .review-form { display: flex; flex-direction: column; gap: 20px; }
@@ -196,7 +253,15 @@
 .star-rating-input .star:hover { color: #f1c40f; transform: scale(1.2); }
 .comment-input { display: flex; flex-direction: column; gap: 8px; }
 .comment-input label { color: #bdc3c7; }
-.comment-input textarea { background-color: #333; color: white; border: 1px solid #555; padding: 12px; border-radius: 8px; resize: vertical; font-family: inherit; }
+.comment-input textarea, .comment-input input {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 12px;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: inherit;
+}
 .submit-review-btn {
   background: linear-gradient(135deg, #f39c12, #e67e22);
   color: white;
@@ -208,6 +273,47 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .submit-review-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+/* Edit Modal */
+.edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.edit-modal-content {
+    background-color: #222;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.edit-modal-content h3 {
+    margin-bottom: 20px;
+}
+
+.edit-modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.edit-modal-content .comment-input input,
+.edit-modal-content .comment-input textarea {
+    width: 100%;
+}
+
+.edit-modal-content button {
+    margin-top: 10px;
+}
 
 .new-vehicle-section {
   padding: 2rem 5%;
