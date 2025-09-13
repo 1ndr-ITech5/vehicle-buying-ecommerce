@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from './../api'; // Import the new api instance
 import './../pagestyle/MyAcc.css';
 import VehicleForm from './../components/VehicleForm';
+import SparePartForm from './../components/SparePartForm';
+import xhuljoImage from './../assets/xhuljo.avif';
 
 const MyAcc = () => {
   const navigate = useNavigate();
@@ -14,8 +16,8 @@ const MyAcc = () => {
   const [adType, setAdType] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
   const [showPayment, setShowPayment] = useState(false);
-  const [showVehicleForm, setShowVehicleForm] = useState(false);
-  const [vehicleFormData, setVehicleFormData] = useState(null);
+  const [showAdForm, setShowAdForm] = useState(false);
+  const [adFormData, setAdFormData] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ cardNumber: '', expiry: '', cvv: '', cardholderName: '' });
 
@@ -92,16 +94,16 @@ const MyAcc = () => {
   };
 
   const handleAdTypeSelection = (type) => setAdType(type);
-  const handlePackageSelection = (packageType) => { setSelectedPackage(packageType); setShowVehicleForm(true); };
-  const handleVehicleFormSubmit = (formData, image) => {
-    setVehicleFormData(formData);
+  const handlePackageSelection = (packageType) => { setSelectedPackage(packageType); setShowAdForm(true); };
+  const handleAdFormSubmit = (formData, image) => {
+    setAdFormData(formData);
     setImageFile(image);
-    setShowVehicleForm(false);
+    setShowAdForm(false);
     setShowPayment(true);
   };
 
-  const handleVehicleFormBack = () => {
-    setShowVehicleForm(false);
+  const handleAdFormBack = () => {
+    setShowAdForm(false);
     setSelectedPackage('');
   };
 
@@ -126,21 +128,30 @@ const MyAcc = () => {
     }
 
     try {
-      const { category, historyCheck, sellOnCredit, ...dataToSend } = vehicleFormData;
-      const response = await api.post(
-        '/vehicles',
-        { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit, vehicleCategory: category }
-      );
+      let response;
+      if (adType === 'vehicle') {
+        const { category, historyCheck, sellOnCredit, ...dataToSend } = adFormData;
+        response = await api.post(
+          '/vehicles',
+          { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit, vehicleCategory: category }
+        );
+      } else {
+        response = await api.post(
+          '/parts',
+          { ...adFormData, "package": selectedPackage, imageUrl }
+        );
+      }
+
       alert(`Payment of €${selectedPackage === 'standard' ? '2' : '5'} processed successfully! Ad created.`);
       setShowPayment(false);
       setAdType('');
       setSelectedPackage('');
-      setVehicleFormData(null);
+      setAdFormData(null);
       setImageFile(null);
-      navigate('/vehicle-ads', { state: { newAd: response.data } });
+      navigate(adType === 'vehicle' ? '/vehicle-ads' : '/spare-parts', { state: { newAd: response.data } });
     } catch (error) {
-      console.error('Error creating vehicle ad:', error);
-      alert('Failed to create vehicle ad. Please try again.');
+      console.error(`Error creating ${adType} ad:`, error);
+      alert(`Failed to create ${adType} ad. Please try again.`);
     }
   };
 
@@ -151,8 +162,8 @@ const MyAcc = () => {
         premium: ['✓ Everything in Standard', '✓ Mileage', '✓ Transmission type', '✓ Engine power', '✓ Fuel type', '✓ Multiple pictures (up to 5)', '✓ 240 characters description', '✓ 1 modification allowed', '✓ 8 days active', '✓ Gold highlight'] 
       },
       spareparts: { 
-        standard: ['✓ 1 picture', '✓ Part name/title', '✓ Part category', '✓ Compatible car models', '✓ Condition (New/Used)', '✓ Location', '✓ Part number (if available)', '✓ 80 characters description', '✓ 5 days active'], 
-        premium: ['✓ Everything in Standard', '✓ Multiple pictures (up to 5)', '✓ Detailed compatibility list', '✓ Installation difficulty level', '✓ Warranty information', '✓ Unlimited description length', '✓ 1 modification allowed', '✓ 8 days active', '✓ Gold highlight'] 
+        standard: ['✓ 1 picture', '✓ Part name/title', '✓ Part category', '✓ Compatible car models', '✓ Condition (New/Used)', '✓ Location', '✓ 80 characters description', '✓ 5 days active'], 
+        premium: ['✓ Everything in Standard', '✓ Year', '✓ Detailed compatibility list', '✓ Installation difficulty level', '✓ Unlimited description length', '✓ 1 modification allowed', '✓ 8 days active', '✓ Gold highlight'] 
       }
     };
     return packages[adType]?.[packageType] || [];
@@ -195,7 +206,24 @@ const MyAcc = () => {
   );
 
   const renderWelcomeView = () => (
-    <div className="welcome-container"><div className="welcome-content"><h1>Welcome to AutoShqip</h1><div className="welcome-image"><img src="/api/placeholder/600/300" alt="AutoShqip - Your automotive marketplace" /></div><div className="welcome-description"><h2>About AutoShqip</h2><p>AutoShqip is Albania's premier automotive marketplace...</p></div><div className="welcome-actions"><button className="action-btn primary" onClick={() => navigate('/vehicle-ads')}>Browse Vehicle Ads</button><button className="action-btn secondary" onClick={() => setCurrentView('adCreation')}>Place Your Ad</button></div><button className="logout-btn" onClick={handleLogout}>Logout</button></div></div>
+    <div className="welcome-container">
+      <div className="welcome-content">
+        <h1>Welcome to AutoShqip</h1>
+        <div className="welcome-image">
+                    <img src={xhuljoImage} alt="AutoShqip - Your automotive marketplace" />
+        </div>
+        <div className="welcome-description">
+          <h2>About AutoShqip</h2>
+          <p>AutoShqip is Albania's premier automotive marketplace, offering a modern platform where users can buy and sell vehicles with ease. It simplifies the entire process by providing secure transactions, intuitive navigation, and a wide range of automotive listings tailored to the local market.
+</p>
+        </div>
+        <div className="welcome-actions">
+          <button className="action-btn primary" onClick={() => navigate('/vehicle-ads')}>Browse Vehicle Ads</button>
+          <button className="action-btn secondary" onClick={() => setCurrentView('adCreation')}>Place Your Ad</button>
+        </div>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
+    </div>
   );
 
   const renderAdCreationView = () => (
@@ -204,10 +232,14 @@ const MyAcc = () => {
         <div className="ad-type-selection"><h2>Choose Ad Type</h2><div className="ad-type-options"><div className="ad-type-card" onClick={() => handleAdTypeSelection('vehicle')}><div className="ad-type-icon">🚗</div><h3>Vehicle Ad</h3><p>Sell your car, motorcycle, or other vehicles</p></div><div className="ad-type-card" onClick={() => handleAdTypeSelection('spareparts')}><div className="ad-type-icon">🔧</div><h3>Spare Parts Ad</h3><p>Sell automotive parts and accessories</p></div></div><button className="back-btn" onClick={() => setCurrentView('welcome')}>← Back to Welcome</button></div>
       ) : !selectedPackage ? (
         <div className="package-selection"><h2>Choose Your Package for {adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</h2><div className="packages"><div className="package-card standard"><div className="package-header"><h3>Standard</h3><div className="price">€2</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'standard').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn" onClick={() => handlePackageSelection('standard')}>Choose Standard</button></div><div className="package-card premium"><div className="package-header"><h3>Premium</h3><div className="price">€5</div></div><div className="package-features"><ul>{getPackageFeatures(adType, 'premium').map((feature, index) => (<li key={index}>{feature}</li>))}</ul></div><button className="package-btn premium-btn" onClick={() => handlePackageSelection('premium')}>Choose Premium</button></div></div><button className="back-btn" onClick={() => setAdType('')}>← Back to Ad Type</button></div>
-      ) : showVehicleForm ? (
-        <VehicleForm selectedPackage={selectedPackage} adType={adType} onFormSubmit={handleVehicleFormSubmit} onBack={handleVehicleFormBack} />
+      ) : showAdForm ? (
+        adType === 'vehicle' ? (
+          <VehicleForm selectedPackage={selectedPackage} adType={adType} onFormSubmit={handleAdFormSubmit} onBack={handleAdFormBack} />
+        ) : (
+          <SparePartForm selectedPackage={selectedPackage} adType={adType} onFormSubmit={handleAdFormSubmit} onBack={handleAdFormBack} />
+        )
       ) : showPayment ? (
-        <div className="payment-section"><h2>Payment</h2><div className="payment-summary"><div className="summary-item"><span>Ad Type:</span><span>{adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</span></div><div className="summary-item"><span>Package:</span><span>{selectedPackage === 'standard' ? 'Standard' : 'Premium'}</span></div><div className="summary-item total"><span>Total:</span><span>€{selectedPackage === 'standard' ? '2' : '5'}</span></div></div><div className="payment-form"><h3>Payment Details</h3><div className="input-group"><input type="text" placeholder="Card Number" value={paymentForm.cardNumber} onChange={(e) => handlePaymentChange('cardNumber', e.target.value)} required /></div><div className="input-row"><div className="input-group"><input type="text" placeholder="MM/YY" value={paymentForm.expiry} onChange={(e) => handlePaymentChange('expiry', e.target.value)} required /></div><div className="input-group"><input type="text" placeholder="CVV" value={paymentForm.cvv} onChange={(e) => handlePaymentChange('cvv', e.target.value)} required /></div></div><div className="input-group"><input type="text" placeholder="Cardholder Name" value={paymentForm.cardholderName} onChange={(e) => handlePaymentChange('cardholderName', e.target.value)} required /></div></div><div className="payment-actions"><button className="payment-btn" onClick={handlePayment} disabled={!isPaymentFormValid()}>Pay €{selectedPackage === 'standard' ? '2' : '5'}</button><button className="back-btn" onClick={() => {setShowPayment(false); setShowVehicleForm(true);}}>← Back to Form</button></div></div>
+        <div className="payment-section"><h2>Payment</h2><div className="payment-summary"><div className="summary-item"><span>Ad Type:</span><span>{adType === 'vehicle' ? 'Vehicle Ad' : 'Spare Parts Ad'}</span></div><div className="summary-item"><span>Package:</span><span>{selectedPackage === 'standard' ? 'Standard' : 'Premium'}</span></div><div className="summary-item total"><span>Total:</span><span>€{selectedPackage === 'standard' ? '2' : '5'}</span></div></div><div className="payment-form"><h3>Payment Details</h3><div className="input-group"><input type="text" placeholder="Card Number" value={paymentForm.cardNumber} onChange={(e) => handlePaymentChange('cardNumber', e.target.value)} required /></div><div className="input-row"><div className="input-group"><input type="text" placeholder="MM/YY" value={paymentForm.expiry} onChange={(e) => handlePaymentChange('expiry', e.target.value)} required /></div><div className="input-group"><input type="text" placeholder="CVV" value={paymentForm.cvv} onChange={(e) => handlePaymentChange('cvv', e.target.value)} required /></div></div><div className="input-group"><input type="text" placeholder="Cardholder Name" value={paymentForm.cardholderName} onChange={(e) => handlePaymentChange('cardholderName', e.target.value)} required /></div></div><div className="payment-actions"><button className="payment-btn" onClick={handlePayment} disabled={!isPaymentFormValid()}>Pay €{selectedPackage === 'standard' ? '2' : '5'}</button><button className="back-btn" onClick={() => {setShowPayment(false); setShowAdForm(true);}}>← Back to Form</button></div></div>
       ) : null}
     </div>
   );

@@ -13,7 +13,7 @@ model User {
   password      String
   createdAt     DateTime  @default(now())
   refreshToken  String?
-  vehicleAds    VehicleAd[] @relation(onDelete: Cascade)
+  vehicleAds    VehicleAd[]
   partAds       PartAd[]
   reservations  Reservation[]
 }
@@ -40,7 +40,7 @@ model VehicleAd {
   vehicleCategory String
   createdAt     DateTime  @default(now())
   
-  owner         User      @relation(fields: [ownerId], references: [id])
+  owner         User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId       String
 
   reserved      Boolean   @default(false)
@@ -69,24 +69,27 @@ model PartSubCategory {
 }
 
 model PartAd {
-  id              String    @id @default(cuid())
-  name            String
-  price           Float
-  location        String
-  phone           String
-  imageUrl        String?
-  condition       String // "New" or "Used"
-  year            Int
-  carMark         String
-  quantity        Int
-  description     String
-  createdAt       DateTime  @default(now())
+  id                      String    @id @default(cuid())
+  name                    String
+  price                   Float
+  location                String
+  phone                   String
+  imageUrl                String?
+  condition               String
+  description             String
+  createdAt               DateTime  @default(now())
   
-  seller          User      @relation(fields: [sellerId], references: [id])
-  sellerId        String
+  seller                  User      @relation(fields: [sellerId], references: [id])
+  sellerId                String
   
-  subCategory     PartSubCategory @relation(fields: [subCategoryId], references: [id])
-  subCategoryId   String
+  subCategory             PartSubCategory @relation(fields: [subCategoryId], references: [id])
+  subCategoryId           String
+
+  compatibleModels        String?
+  detailedCompatibility   String?
+  installationDifficulty  String?
+  year                    Int?
+  package                 String?
 }
 
 model Review {

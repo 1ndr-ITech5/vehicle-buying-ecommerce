@@ -4,18 +4,16 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 const finalCategoriesData = [
-    { name: 'Security & Safety', icon: 'fas fa-shield-alt', subCategories: [ { name: 'Seat Belts', partCount: 10 }, { name: 'Airbags', partCount: 12 }, { name: 'Alarm Systems', partCount: 11 }, { name: 'ABS Components', partCount: 12 } ] },
-    { name: 'Braking System', icon: 'fas fa-compact-disc', subCategories: [ { name: 'Brake Pads', partCount: 12 }, { name: 'Brake Discs', partCount: 11 }, { name: 'Brake Calipers', partCount: 10 }, { name: 'Brake Hoses', partCount: 12 } ] },
-    { name: 'Engine & Components', icon: 'fas fa-cogs', subCategories: [ { name: 'Complete Engines', partCount: 11 }, { name: 'Pistons & Rings', partCount: 10 }, { name: 'Cylinder Heads', partCount: 12 }, { name: 'Timing Belts & Chains', partCount: 11 } ] },
-    { name: 'Suspension & Steering', icon: 'fas fa-car-alt', subCategories: [ { name: 'Shock Absorbers', partCount: 10 }, { name: 'Coil Springs', partCount: 11 }, { name: 'Control Arms', partCount: 12 }, { name: 'Power Steering Pumps', partCount: 10 } ] },
-    { name: 'Transmission', icon: 'fas fa-sitemap', subCategories: [ { name: 'Complete Transmissions', partCount: 11 }, { name: 'Clutch Kits', partCount: 12 }, { name: 'Gearboxes', partCount: 10 }, { name: 'CV Joints', partCount: 11 } ] },
-    { name: 'Body & Exterior', icon: 'fas fa-car', subCategories: [ { name: 'Doors', partCount: 10 }, { name: 'Hoods', partCount: 11 }, { name: 'Fenders', partCount: 12 }, { name: 'Bumpers', partCount: 10 } ] },
-    { name: 'Filters & Fluids', icon: 'fas fa-filter', subCategories: [ { name: 'Oil Filters', partCount: 12 }, { name: 'Air Filters', partCount: 11 }, { name: 'Fuel Filters', partCount: 10 }, { name: 'Motor Oil', partCount: 12 } ] },
-    { name: 'Lighting & Electrics', icon: 'fas fa-lightbulb', subCategories: [ { name: 'Headlights', partCount: 10 }, { name: 'Tail Lights', partCount: 11 }, { name: 'Alternators', partCount: 12 }, { name: 'Spark Plugs', partCount: 10 } ] },
-    { name: 'Tires & Rims', icon: 'fas fa-dot-circle', subCategories: [ { name: 'Summer Tires', partCount: 12 }, { name: 'Winter Tires', partCount: 11 }, { name: 'All-Season Tires', partCount: 10 }, { name: 'Alloy Rims', partCount: 12 } ] },
-    { name: 'Interior Parts', icon: 'fas fa-chair', subCategories: [ { name: 'Seats', partCount: 10 }, { name: 'Floor Mats', partCount: 11 }, { name: 'Steering Wheels', partCount: 12 }, { name: 'Shift Knobs', partCount: 10 } ] },
-    { name: 'Audio & Video', icon: 'fas fa-volume-up', subCategories: [ { name: 'Head Units', partCount: 10 }, { name: 'Speakers', partCount: 12 }, { name: 'Amplifiers', partCount: 11 }, { name: 'Subwoofers', partCount: 10 } ] },
-    { name: 'Car Care & Cleaning', icon: 'fas fa-soap', subCategories: [ { name: 'Car Wash Soap', partCount: 12 }, { name: 'Wax & Sealants', partCount: 11 }, { name: 'Interior Cleaners', partCount: 10 }, { name: 'Tire Shine', partCount: 12 } ] },
+    { name: 'Engine Parts', subCategories: [ { name: 'Filters' }, { name: 'Belts & Chains' }, { name: 'Gaskets & Seals' } ] },
+    { name: 'Brake System', subCategories: [ { name: 'Brake Pads' }, { name: 'Brake Discs' }, { name: 'Calipers' } ] },
+    { name: 'Suspension', subCategories: [ { name: 'Shock Absorbers' }, { name: 'Control Arms' }, { name: 'Ball Joints' } ] },
+    { name: 'Exhaust System', subCategories: [ { name: 'Mufflers' }, { name: 'Catalytic Converters' }, { name: 'Exhaust Pipes' } ] },
+    { name: 'Transmission', subCategories: [ { name: 'Clutch Kits' }, { name: 'Flywheels' }, { name: 'Gearboxes' } ] },
+    { name: 'Electrical', subCategories: [ { name: 'Batteries' }, { name: 'Alternators' }, { name: 'Spark Plugs' } ] },
+    { name: 'Body Parts', subCategories: [ { name: 'Bumpers' }, { name: 'Fenders' }, { name: 'Doors' } ] },
+    { name: 'Interior', subCategories: [ { name: 'Seats' }, { name: 'Dashboards' }, { name: 'Floor Mats' } ] },
+    { name: 'Wheels & Tires', subCategories: [ { name: 'Tires' }, { name: 'Rims' }, { name: 'Hubcaps' } ] },
+    { name: 'Accessories', subCategories: [ { name: 'Car Covers' }, { name: 'Phone Holders' }, { name: 'Roof Racks' } ] },
 ];
 
 const vehicleData = [
@@ -83,9 +81,8 @@ async function main() {
         await prisma.partCategory.create({
             data: {
                 name: cat.name,
-                icon: cat.icon,
                 subCategories: {
-                    create: cat.subCategories.map(sc => ({ name: sc.name, partCount: sc.partCount }))
+                    create: cat.subCategories.map(sc => ({ name: sc.name, partCount: 10 }))
                 },
             },
         });
@@ -95,7 +92,7 @@ async function main() {
     const allSubCategories = await prisma.partSubCategory.findMany();
 
     for (const subCat of allSubCategories) {
-        for (let i = 0; i < subCat.partCount; i++) {
+        for (let i = 0; i < 10; i++) { // Create 10 parts for each subcategory
             const randomMark = carData.marks[Math.floor(Math.random() * carData.marks.length)];
             const randomLocation = carData.locations[Math.floor(Math.random() * carData.locations.length)];
             const randomCondition = carData.conditions[Math.floor(Math.random() * carData.conditions.length)];
@@ -107,9 +104,6 @@ async function main() {
                     location: randomLocation,
                     phone: `+355 69 ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}`,
                     condition: randomCondition,
-                    year: new Date().getFullYear() - Math.floor(Math.random() * 10),
-                    carMark: randomMark,
-                    quantity: Math.floor(Math.random() * 20) + 1,
                     description: `High quality ${subCat.name} for ${randomMark}. Condition: ${randomCondition}.`,
                     sellerId: user.id,
                     subCategoryId: subCat.id,

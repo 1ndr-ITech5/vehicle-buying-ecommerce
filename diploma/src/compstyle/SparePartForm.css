@@ -1,0 +1,128 @@
+.spare-part-form-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.spare-part-form-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.spare-part-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-section {
+  padding: 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.form-section h3 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.spare-part-form label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.spare-part-form input[type="text"],
+.spare-part-form input[type="number"],
+.spare-part-form select,
+.spare-part-form textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.spare-part-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.history-check-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.history-check-label {
+  margin-bottom: 0.5rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.submit-btn {
+  padding: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.back-btn-top {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.back-btn-top:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}

@@ -413,7 +413,7 @@ const Spare = () => {
                 </div>
 
                 <button onClick={handleSearch}>Search</button>
-                <button onClick={handleSaveSearch}>Save Search</button>
+                <button onClick={handleSaveSearch} className="save-search-btn">Save Search</button>
 
                 {savedSearches.length > 0 && (
                     <div className="saved-searches">
