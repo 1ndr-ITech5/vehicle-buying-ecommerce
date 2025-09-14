@@ -78,9 +78,9 @@
 .form-group { display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .form-group label { font-size: 0.9rem; color: #bdc3c7; font-weight: 700; }
 .form-group select, .form-group input[type="text"] {
-  background-color: #333;
+  background-color: #000000;
   color: white;
-  border: 1px solid #555;
+  border: 1px solid #f1f1f1;
   padding: 12px;
   border-radius: 8px;
   width: 100%;
@@ -126,9 +126,11 @@
 .car-card:hover { transform: translateY(-10px); box-shadow: 0 15px 25px rgba(0,0,0,0.2); }
 .car-image-placeholder { width: 100%; height: 200px; background-size: cover; background-position: center; }
 .car-details { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-.car-price { font-size: 1.8rem; font-weight: bold; color: gold; margin-bottom: 10px; }
+.car-price { font-size: 1.8rem; font-weight: bold; color: rgb(255, 153, 0); margin-bottom: 10px; }
 .car-name { font-size: 1.3rem; font-weight: bold; color: black; margin: 0 0 15px 0; }
-.car-specs, .car-location, .car-phone { color: black; font-size: 0.9rem; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
+.car-price { font-size: 2rem; font-weight: bold; color: rgb(255, 166, 0); margin-bottom: 10px; }
+.car-name { font-size: 1.5rem; font-weight: bold; color: black; margin: 0 0 15px 0; }
+.car-specs, .car-location, .car-phone { color: rgb(0, 0, 0); font-size: 1rem; margin: 4px 0; display: flex; align-items: center; gap: 8px; }
 
 /* Reviews Section */
 .reviews-section { width: 80%; margin: 40px auto 20px; background: black; color: white; padding: 40px; border-radius: 15px; }
@@ -365,6 +367,8 @@
 
 .latest-text {
   text-align: center;
+  color: #0f263d;
+  font-size: 25px;
 }
 
 .new-car-name {

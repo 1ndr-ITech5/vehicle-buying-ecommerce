@@ -26,6 +26,7 @@
 .new-car-image-placeholder {
   width: 100%;
   flex-grow: 1;
+  padding: 20px;
   background-color: #e0e0e0;
 }
 
@@ -36,18 +37,19 @@
 
 .new-car-price {
   font-weight: bold;
-  font-size: 1.2rem;
-  color: #e53935;
+  font-size: 1.4rem;
+  color: #ff7512;
 }
 
 .new-car-name {
-  font-size: 1rem;
+  font-size: 1.2rem;
   margin: 0.5rem 0 0;
+  font-weight: bold;
 }
 
 .new-car-specs,
 .new-car-location-phone {
   font-size: 0.9rem;
-  color: #bdc3c7;
-  margin-top: 0.5rem;
+  color: #080707;
+  margin-top: 0.7rem;
 }
