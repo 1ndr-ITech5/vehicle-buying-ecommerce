@@ -67,30 +67,33 @@ router.get('/:id', async (req, res) => {
 
 // Create a new part ad
 router.post('/', authenticateToken, async (req, res) => {
-  const {
-    name,
-    price,
-    location,
-    phone,
-    imageUrl,
-    condition,
-    description,
-    compatibleModels,
-    detailedCompatibility,
-    installationDifficulty,
-    year,
-    subCategory,
-    'package': packageType
-  } = req.body;
-  const ownerId = req.user.userId;
-
   try {
+    console.log('req.user:', req.user);
+    console.log('req.body:', req.body);
+
+    const {
+      name,
+      price,
+      location,
+      phone,
+      imageUrl,
+      condition,
+      description,
+      compatibleModels,
+      detailedCompatibility,
+      installationDifficulty,
+      year, // The year comes in as a string or empty string
+      subCategory,
+      'package': packageType
+    } = req.body;
+    const ownerId = req.user.userId;
+
     console.log('--- Creating new part ad ---');
     console.log('Request body:', req.body);
 
     // Validate required fields
     if (!name || !price || !location || !phone || !condition || !description || !subCategory) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Missing required fields',
         required: ['name', 'price', 'location', 'phone', 'condition', 'description', 'subCategory']
       });
@@ -113,6 +116,14 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid price value' });
     }
 
+    // --- FIX STARTS HERE ---
+    // Handle the year value properly. If it's an empty string or not a valid number, set it to null.
+    const parsedYear = year ? parseInt(year, 10) : null;
+    if (year && isNaN(parsedYear)) {
+        return res.status(400).json({ message: 'Invalid year value' });
+    }
+    // --- FIX ENDS HERE ---
+
     const dataToSave = {
       name: String(name).trim(),
       price: parsedPrice,
@@ -124,7 +135,7 @@ router.post('/', authenticateToken, async (req, res) => {
       compatibleModels: compatibleModels ? String(compatibleModels).trim() : null,
       detailedCompatibility: detailedCompatibility ? String(detailedCompatibility).trim() : null,
       installationDifficulty: installationDifficulty ? String(installationDifficulty).trim() : null,
-      year: year ? parseInt(year) : null,
+      year: parsedYear, // Use the correctly parsed year
       package: packageType ? String(packageType).trim() : null,
       seller: { connect: { id: ownerId } },
       subCategory: { connect: { id: subCategoryRecord.id } },
@@ -141,7 +152,7 @@ router.post('/', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('--- Error creating part ad ---');
     console.error('Error details:', error);
-    
+
     // Handle Prisma-specific errors
     if (error.code === 'P2002') {
       return res.status(400).json({ message: 'Duplicate entry detected' });
@@ -152,9 +163,9 @@ router.post('/', authenticateToken, async (req, res) => {
     if (error.code === 'P2025') {
       return res.status(404).json({ message: 'Related record not found' });
     }
-    
-    res.status(500).json({ 
-      message: 'Error creating part ad', 
+
+    res.status(500).json({
+      message: 'Error creating part ad',
       error: error.message,
       code: error.code || 'UNKNOWN_ERROR'
     });

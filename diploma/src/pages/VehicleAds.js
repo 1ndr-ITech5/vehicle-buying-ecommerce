@@ -147,6 +147,18 @@ const VehicleAds = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserId(payload.userId);
+      } catch (error) {
+        console.error('Invalid token:', error);
+      }
+    }
+  }, []);
+
   const isOwner = (vehicle) => {
     return vehicle.ownerId === userId;
   };
@@ -223,6 +235,17 @@ const VehicleAds = () => {
       });
 
       let mergedVehicles = Array.from(allVehiclesMap.values());
+      const storedVehicles = JSON.parse(localStorage.getItem('vehicles'));
+      if (storedVehicles) {
+          mergedVehicles = mergedVehicles.map(vehicle => {
+              const storedVehicle = storedVehicles.find(v => v.id === vehicle.id);
+              if (storedVehicle) {
+                  return { ...vehicle, reserved: storedVehicle.reserved };
+              }
+              return vehicle;
+          });
+      }
+
       console.log('Merged vehicles:', mergedVehicles);
 
       setAllVehicles(mergedVehicles);
@@ -416,22 +439,27 @@ const VehicleAds = () => {
   };
 
   const handleReservationSubmit = async (formData) => {
-    const updatedVehicles = allVehicles.map(v => v.id === selectedVehicle.id ? { ...v, reserved: true } : v);
+    const updatedVehicles = allVehicles.map(v => v.id === selectedVehicle.id ? { ...v, reserved: true, reservedBy: userId } : v);
     setAllVehicles(updatedVehicles);
     setVehicles(updatedVehicles);
-    setSelectedVehicle({ ...selectedVehicle, reserved: true });
+    setSelectedVehicle({ ...selectedVehicle, reserved: true, reservedBy: userId });
+    localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
     alert('Vehicle reserved successfully (simulated)!');
     setShowReserveModal(false);
   };
 
   const handleCancelReservation = async (vehicle) => {
+    if (vehicle.reservedBy !== userId) {
+        return alert("You cannot cancel someone else's reservation.");
+    }
     if (window.confirm('Are you sure you want to cancel this reservation?')) {
-      const updatedVehicles = allVehicles.map(v => v.id === vehicle.id ? { ...v, reserved: false } : v);
+      const updatedVehicles = allVehicles.map(v => v.id === vehicle.id ? { ...v, reserved: false, reservedBy: null } : v);
       setAllVehicles(updatedVehicles);
       setVehicles(updatedVehicles);
       if (selectedVehicle && selectedVehicle.id === vehicle.id) {
-        setSelectedVehicle({ ...selectedVehicle, reserved: false });
+        setSelectedVehicle({ ...selectedVehicle, reserved: false, reservedBy: null });
       }
+      localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
       alert('Reservation cancelled successfully (simulated)!');
     }
   };
@@ -507,7 +535,7 @@ const VehicleAds = () => {
                         )}
                       </div>
                       <div className="ad-actions-right">
-                        {vehicle.reserved && <button className="ad-action-btn cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(vehicle);}}>Cancel Reservation</button>}
+                        {vehicle.reserved && vehicle.reservedBy === userId && <button className="ad-action-btn cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(vehicle);}}>Cancel Reservation</button>}
                       </div>
                     </div>
                   </div>

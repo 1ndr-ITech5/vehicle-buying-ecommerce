@@ -25,6 +25,19 @@ const Spare = () => {
     const [availableMarks, setAvailableMarks] = useState([]);
     const [availableModels, setAvailableModels] = useState([]);
     const [savedSearches, setSavedSearches] = useState([]);
+    const [userId, setUserId] = useState(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setUserId(payload.userId);
+            } catch (error) {
+                console.error('Invalid token:', error);
+            }
+        }
+    }, []);
 
     const vehicleData = {
         car: {
@@ -171,7 +184,17 @@ const Spare = () => {
         if (!selectedSubCategory) return;
         try {
             const response = await axios.get('/db.json');
-            const parts = response.data.parts.filter(p => p.subCategoryId === selectedSubCategory.id);
+            let parts = response.data.parts.filter(p => p.subCategoryId === selectedSubCategory.id);
+            const storedParts = JSON.parse(localStorage.getItem('parts'));
+            if (storedParts) {
+                parts = parts.map(part => {
+                    const storedPart = storedParts.find(p => p.id === part.id);
+                    if (storedPart) {
+                        return { ...part, reserved: storedPart.reserved };
+                    }
+                    return part;
+                });
+            }
             setInitialParts(parts);
             setParts(parts);
         } catch (error) {
@@ -306,19 +329,26 @@ const Spare = () => {
     };
 
     const handleReservationSubmit = async (formData) => {
-        const token = localStorage.getItem('token');
-        try {
-            // This is a mock API call, as there is no backend endpoint for part reservation.
-            // In a real application, you would make a POST request to your API.
-            console.log("Reserving part:", selectedPart.id, "with data:", formData);
-            alert('Reservation successful!');
-            setShowReserveModal(false);
-            // Update the part's reserved status locally.
-            const updatedParts = parts.map(p => p.id === selectedPart.id ? { ...p, reserved: true } : p);
+        const updatedParts = parts.map(p => p.id === selectedPart.id ? { ...p, reserved: true, reservedBy: userId } : p);
+        setParts(updatedParts);
+        setSelectedPart({ ...selectedPart, reserved: true, reservedBy: userId });
+        localStorage.setItem('parts', JSON.stringify(updatedParts));
+        alert('Part reserved successfully (simulated)!');
+        setShowReserveModal(false);
+    };
+
+    const handleCancelReservation = (part) => {
+        if (part.reservedBy !== userId) {
+            return alert("You cannot cancel someone else's reservation.");
+        }
+        if (window.confirm('Are you sure you want to cancel this reservation?')) {
+            const updatedParts = parts.map(p => p.id === part.id ? { ...p, reserved: false, reservedBy: null } : p);
             setParts(updatedParts);
-            setSelectedPart({ ...selectedPart, reserved: true });
-        } catch (error) {
-            alert('Reservation failed.');
+            if (selectedPart && selectedPart.id === part.id) {
+                setSelectedPart({ ...selectedPart, reserved: false, reservedBy: null });
+            }
+            localStorage.setItem('parts', JSON.stringify(updatedParts));
+            alert('Reservation cancelled successfully (simulated)!');
         }
     };
 
@@ -436,13 +466,17 @@ const Spare = () => {
                 <p>{parts.length} parts found</p>
                 <div className="part-cards">
                     {parts.map(part => (
-                        <div key={part.id} className="part-card" onClick={() => handlePartClick(part)}>
+                        <div key={part.id} className={`part-card ${part.reserved ? 'reserved' : ''}`} onClick={() => !part.reserved && handlePartClick(part)}>
+                            {part.reserved && <div className="reserved-badge">Reserved</div>}
                             <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
                             <div className="part-details">
                                 <div className="part-name">{part.name}</div>
                                 <div className="part-vehicle-info">{`${part.vehicleType} - ${part.carMark} ${part.carModel}`}</div>
                                 <div className="part-price">€{part.price}</div>
-                                <div className="part-location-phone">{`${part.location} • ${part.phone} • ${part.year}`}</div>
+                                <div className="part-card-footer">
+                                    <div className="part-location-phone">{`${part.location} • ${part.phone} • ${part.year}`}</div>
+                                    {part.reserved && part.reservedBy === userId && <button className="cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(part);}}>Cancel Reservation</button>}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -487,7 +521,8 @@ const Spare = () => {
                         </div>
                     </div>
                     <div className="reserve-btn-container">
-                        <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>
+                        {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>}
+                        {selectedPart.reserved && selectedPart.reservedBy === userId && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>Cancel Reservation</button>}
                     </div>
                     <div className="description-section">
                         <h3>Description</h3>
