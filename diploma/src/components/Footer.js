@@ -16,12 +16,16 @@ function Footer() {
         <div className="footer-section contact">
           <h3>Contact Us</h3>
           <p>Email: contact@autoshqip.com</p>
-          <p>Phone: +355 69 123 4567</p>
+          <p>Phone: +355 69 836 9361</p>
         </div>
         <div className="footer-section sponsors">
           <h3>Our Sponsors</h3>
-          <img src={sponsor1} alt="Sponsor 1" />
-          <img src={sponsor2} alt="Sponsor 2" />
+          <a href="https://www.shell.com/" target="_blank" rel="noopener noreferrer">
+            <img src={sponsor1} alt="Sponsor 1" />
+          </a>
+          <a href="https://www.if-insurance.com/about-if" target="_blank" rel="noopener noreferrer">
+            <img src={sponsor2} alt="Sponsor 2" />
+          </a>
         </div>
       </div>
       <div className="footer-bottom">

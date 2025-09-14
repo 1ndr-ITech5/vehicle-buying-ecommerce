@@ -467,6 +467,7 @@ const Spare = () => {
                 <div className="part-cards">
                     {parts.map(part => (
                         <div key={part.id} className={`part-card ${part.reserved ? 'reserved' : ''}`} onClick={() => !part.reserved && handlePartClick(part)}>
+                            
                             {part.reserved && <div className="reserved-badge">Reserved</div>}
                             <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
                             <div className="part-details">

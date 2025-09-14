@@ -279,6 +279,7 @@ input[type="number"] {
   cursor: pointer;
   transition: all 0.3s ease;
   height: 200px;
+  position: relative;
 }
 
 .vehicle-card:hover {
@@ -489,8 +490,7 @@ input[type="number"] {
 }
 
 .spec-section,
-.description-section,
-.seller-section {
+.description-section {
   background: #f8f9fa;
   border-radius: 12px;
   padding: 25px;
@@ -525,8 +525,9 @@ input[type="number"] {
   font-size: 16px;
   font-weight: 600;
   color: #34495e;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   display: block;
+  text-align: center;
 }
 
 .price-section .installment-options {
@@ -560,6 +561,8 @@ input[type="number"] {
   font-size: 18px;
   font-weight: 600;
   color: #27ae60;
+  text-align: center;
+  margin-top: 20px;
 }
 
 .price-section .credit-not-offered {
@@ -684,8 +687,7 @@ input[type="number"] {
 .price-section h3,
 .description-section h3,
 .history-section h3,
-.insurance-section h3,
-.seller-section h3 {
+.insurance-section h3 {
   color: #2c3e50;
   margin-bottom: 20px;
   font-size: 20px;
@@ -1116,4 +1118,22 @@ input[type="number"] {
 
 .cancel-reservation-btn:hover {
   background-color: #c0392b;
+}
+
+.seller-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+.seller-item svg {
+  font-size: 20px;
+  color: #3498db;
 }

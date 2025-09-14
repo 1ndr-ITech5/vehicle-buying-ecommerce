@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import axios from 'axios';
 import VehicleForm from './../components/VehicleForm';
 import api from './../api';
@@ -518,6 +518,7 @@ const VehicleAds = () => {
             <div className="vehicle-cards">
               {(searched ? vehicles : allVehicles).slice((currentPage - 1) * 8, currentPage * 8).map(vehicle => (
                 <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''} ${vehicle.package === 'premium' ? 'premium' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? 'This vehicle is reserved' : ''}>
+                  
                   {vehicle.reserved && <div className="reserved-badge">Reserved</div>}
                   <div className="vehicle-image"><img src={vehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={vehicle.name} /></div>
                   <div className="vehicle-info">
@@ -562,9 +563,11 @@ const VehicleAds = () => {
                     <div className={`installments-section`}>
                       <span>Pay by installments:</span>
                       <div className="installment-options">
+                        <button onClick={() => setInstallments(1)}>1 month</button>
                         <button onClick={() => setInstallments(3)}>3 months</button>
                         <button onClick={() => setInstallments(6)}>6 months</button>
                         <button onClick={() => setInstallments(9)}>9 months</button>
+                        <button onClick={() => setInstallments(12)}>12 months</button>
                       </div>
                       {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
                       
@@ -574,7 +577,7 @@ const VehicleAds = () => {
                 </div>
                 {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
                 {selectedVehicle.description && <div className="description-section"><h3>Description</h3><p>{selectedVehicle.description}</p></div>}
-                <div className="seller-section"><h3>Seller Information</h3><div className="seller-info"><div className="seller-item"><span className="spec-label">Phone:</span><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><span className="spec-label">Location:</span><span className="spec-value">{selectedVehicle.location}</span></div></div></div>
+                                                <div className="seller-info"><div className="seller-item"><FaPhone /><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><FaMapMarkerAlt /><span className="spec-value">{selectedVehicle.location}</span></div></div>
             </div>
             <div className="detail-right">
               <div className="vehicle-image-detail">
