@@ -354,7 +354,7 @@ const Spare = () => {
 
     const renderSubCategories = () => (
         <div>
-            <button onClick={() => { setView('categories'); setSelectedCategory(null); }}>← Back to Categories</button>
+            <button className="back-btn" onClick={() => { setView('categories'); setSelectedCategory(null); }}>← Back to Categories</button>
             <h2>{selectedCategory.name}</h2>
             <div className="subcategory-list">
                 {selectedCategory.subCategories.map((sub) => (
@@ -369,7 +369,7 @@ const Spare = () => {
     const renderParts = () => (
         <div className="parts-view" style={{ display: 'flex' }}>
             <div className="filters-sidebar" style={{ flex: '35%' }}>
-                <button onClick={() => { setView('subcategories'); setParts([]); }}>← Back to Sub-categories</button>
+                <button className="back-btn" onClick={() => { setView('subcategories'); setParts([]); }}>← Back to Sub-categories</button>
                 <h3>FILTERS</h3>
                 
                 <label htmlFor="vehicleType">Vehicle Type</label>
@@ -437,12 +437,12 @@ const Spare = () => {
                 <div className="part-cards">
                     {parts.map(part => (
                         <div key={part.id} className="part-card" onClick={() => handlePartClick(part)}>
-                            <div className="part-image-placeholder"></div>
+                            <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
                             <div className="part-details">
                                 <div className="part-name">{part.name}</div>
                                 <div className="part-vehicle-info">{`${part.vehicleType} - ${part.carMark} ${part.carModel}`}</div>
                                 <div className="part-price">€{part.price}</div>
-                                <div className="part-location-phone">{`${part.location} • ${part.phone}`}</div>
+                                <div className="part-location-phone">{`${part.location} • ${part.phone} • ${part.year}`}</div>
                             </div>
                         </div>
                     ))}
@@ -453,28 +453,55 @@ const Spare = () => {
 
     const renderPartDetail = () => (
         <div className="part-detail-view">
-            <button onClick={() => setSelectedPart(null)}>← Back to Parts</button>
-            <div style={{ display: 'flex', marginTop: '20px' }}>
-                <div className="part-detail-left" style={{ flex: '40%', paddingRight: '20px' }}>
+            <button className="back-btn" onClick={() => setSelectedPart(null)}>← Back to Parts</button>
+            <div className="part-detail-content">
+                <div className="part-detail-left">
                     <h2>{selectedPart.name}</h2>
-                    <p>Condition: {selectedPart.condition}</p>
-                    <p>Quantity: {selectedPart.quantity}</p>
-                    <p>Location: {selectedPart.location}</p>
-                    <p>Price: €{selectedPart.price}</p>
-                    <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>
+                    <div className="spec-section">
+                        <h2>Spare Info</h2>
+                        <div className="spec-grid">
+                            <div className="spec-item">
+                                <span className="spec-label">Category:</span>
+                                <span className="spec-value">{selectedSubCategory.name}</span>
+                            </div>
+                            <div className="spec-item">
+                                <span className="spec-label">Compatible with:</span>
+                                <span className="spec-value">{selectedPart.carMark} {selectedPart.carModel}</span>
+                            </div>
+                            <div className="spec-item">
+                                <span className="spec-label">Condition:</span>
+                                <span className="spec-value">{selectedPart.condition}</span>
+                            </div>
+                            <div className="spec-item">
+                                <span className="spec-label">Location:</span>
+                                <span className="spec-value">{selectedPart.location}</span>
+                            </div>
+                            <div className="spec-item">
+                                <span className="spec-label">Year:</span>
+                                <span className="spec-value">{selectedPart.year}</span>
+                            </div>
+                            <div className="spec-item">
+                                <span className="spec-label">Price:</span>
+                                <span className="spec-value">€{selectedPart.price}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="reserve-btn-container">
+                        <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>
+                    </div>
                     <div className="description-section">
                         <h3>Description</h3>
                         <p>{selectedPart.description}</p>
                     </div>
-                    <div className="seller-section">
+                </div>
+                <div className="part-detail-right">
+                    <img src={selectedPart.imageUrl} alt={selectedPart.name} />
+                    <div className="seller-info">
                         <h3>Seller Information</h3>
                         <p>Name: {selectedPart.sellerName}</p>
-                        <p>Email: {selectedPart.sellerEmail}</p>
+                        
                         <p>Contact: {selectedPart.phone}</p>
                     </div>
-                </div>
-                <div className="part-detail-right" style={{ flex: '60%' }}>
-                    <img src={selectedPart.imageUrl} alt={selectedPart.name} style={{ width: '100%', borderRadius: '15px' }} />
                 </div>
             </div>
             {showReserveModal && <ReservationModal part={selectedPart} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
