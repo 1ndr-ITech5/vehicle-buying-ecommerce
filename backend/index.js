@@ -12,6 +12,7 @@ const vehicleRoutes = require('./routes/vehicles');
 const reviewRoutes = require('./routes/reviews');
 const partRoutes = require('./routes/parts');
 const uploadRoutes = require('./routes/upload');
+const savedItemsRoutes = require('./routes/savedItems');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,6 +27,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/parts', partRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/saved-items', savedItemsRoutes);
 
 app.get('/', (req, res) => {
   res.send('AutoShqip API is running!');

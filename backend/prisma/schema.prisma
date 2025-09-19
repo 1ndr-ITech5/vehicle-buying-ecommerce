@@ -8,14 +8,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  createdAt     DateTime  @default(now())
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  createdAt       DateTime  @default(now())
   refreshToken  String?
-  vehicleAds    VehicleAd[]
-  partAds       PartAd[]
-  reservations  Reservation[]
+  vehicleAds      VehicleAd[]
+  partAds         PartAd[]
+  reservations    Reservation[]
+  savedVehicleAds SavedVehicleAd[]
+  savedPartAds    SavedPartAd[]
 }
 
 model VehicleAd {
@@ -46,8 +48,10 @@ model VehicleAd {
   reserved      Boolean   @default(false)
   reservations  Reservation[]
   historyCheck  Json?
+  insuranceBaseRate Float?
   sellOnCredit  Boolean   @default(false)
   modifiedOnce  Boolean   @default(false)
+  savedBy       SavedVehicleAd[]
 }
 
 model PartCategory {
@@ -90,6 +94,7 @@ model PartAd {
   installationDifficulty  String?
   year                    Int?
   package                 String?
+  savedBy                 SavedPartAd[]
 }
 
 model Review {
@@ -112,4 +117,26 @@ model Reservation {
 
   user            User      @relation(fields: [userId], references: [id])
   userId          String
+}
+
+model SavedVehicleAd {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  vehicleAd   VehicleAd @relation(fields: [vehicleAdId], references: [id], onDelete: Cascade)
+  vehicleAdId String
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, vehicleAdId])
+}
+
+model SavedPartAd {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  partAd    PartAd   @relation(fields: [partAdId], references: [id], onDelete: Cascade)
+  partAdId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, partAdId])
 }

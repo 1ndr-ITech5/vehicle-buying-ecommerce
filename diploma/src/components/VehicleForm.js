@@ -7,10 +7,11 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
       ? {
           ...initialData,
           historyCheck: initialData.historyCheck || {
-            accidents: 'questionable',
-            stolen: 'questionable',
-            mileage_check: 'questionable',
+            accidents: null,
+            stolen: null,
+            mileage_check: null,
           },
+          insuranceBaseRate: initialData.insuranceBaseRate || '',
         }
       : {
           name: '',
@@ -30,10 +31,11 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
           carPlates: '',
           category: '',
           historyCheck: {
-            accidents: 'questionable',
-            stolen: 'questionable',
-            mileage_check: 'questionable',
+            accidents: null,
+            stolen: null,
+            mileage_check: null,
           },
+          insuranceBaseRate: '',
         }
   );
   const [image, setImage] = useState(null);
@@ -115,6 +117,20 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
           </div>
         </div>
 
+        <div className="form-section">
+          <h3>Contact & Location</h3>
+          <div className="form-row">
+            <div>
+              <label htmlFor="phone">Phone</label>
+              <input id="phone" type="text" name="phone" value={formData.phone} onChange={handleChange} required />
+            </div>
+            <div>
+              <label htmlFor="location">Location</label>
+              <input id="location" type="text" name="location" value={formData.location} onChange={handleChange} required />
+            </div>
+          </div>
+        </div>
+
         {isPremium && (
           <div className="form-section">
             <h3>Premium Features</h3>
@@ -181,19 +197,19 @@ const VehicleForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialDat
           </div>
         </div>
 
-        <div className="form-section seller-info-section">
-          <h3>Seller Information</h3>
+        <div className="form-section">
+          <h3>Insurance Calculator</h3>
           <div className="form-row">
             <div>
-              <label htmlFor="location">Location</label>
-              <input id="location" type="text" name="location" value={formData.location} onChange={handleChange} required />
-            </div>
-            <div>
-              <label htmlFor="phone">Phone Number</label>
-              <input id="phone" type="text" name="phone" value={formData.phone} onChange={handleChange} required />
+              <label htmlFor="insuranceBaseRate">Insurance Base Rate</label>
+              <input id="insuranceBaseRate" type="number" name="insuranceBaseRate" value={formData.insuranceBaseRate} onChange={handleChange} />
             </div>
           </div>
         </div>
+
+        
+
+        
 
         <div className="form-section">
           <h3>Pricing and Description</h3>

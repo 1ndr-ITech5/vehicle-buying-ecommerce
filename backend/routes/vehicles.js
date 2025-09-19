@@ -7,7 +7,11 @@ const router = express.Router();
 
 // Create a new vehicle ad
 router.post('/', authenticateToken, async (req, res) => {
-  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType, vehicleCategory } = req.body;
+  console.log('Authorization header:', req.headers['authorization']);
+  console.log('Request body:', req.body);
+  console.log('User from token:', req.user);
+  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType, vehicleCategory, historyCheck, insuranceBaseRate } = req.body;
+  console.log('Package type:', packageType);
   const ownerId = req.user.userId;
 
   const parsedYear = parseInt(year);
@@ -36,11 +40,14 @@ router.post('/', authenticateToken, async (req, res) => {
         carPlates,
         "package": packageType,
         vehicleCategory,
+        historyCheck,
+        insuranceBaseRate: insuranceBaseRate ? parseFloat(insuranceBaseRate) : null,
         owner: { connect: { id: ownerId } },
       },
     });
     res.status(201).json(newVehicleAd);
   } catch (error) {
+    console.error('Error creating vehicle ad:', error);
     res.status(500).json({ message: 'Error creating vehicle ad', error: error.message });
   }
 });
@@ -205,7 +212,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const ownerId = req.user.userId;
-  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType } = req.body;
+  const { name, make, model, year, price, mileage, transmission, fuel, color, location, phone, description, imageUrl, power, engine, carPlates, "package": packageType, historyCheck, insuranceBaseRate } = req.body;
 
   try {
     const vehicleAd = await prisma.vehicleAd.findUnique({
@@ -249,6 +256,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
         engine,
         carPlates,
         "package": packageType,
+        historyCheck,
+        insuranceBaseRate: insuranceBaseRate ? parseFloat(insuranceBaseRate) : vehicleAd.insuranceBaseRate,
         modifiedOnce: vehicleAd.package === 'premium' ? true : vehicleAd.modifiedOnce,
       },
     });

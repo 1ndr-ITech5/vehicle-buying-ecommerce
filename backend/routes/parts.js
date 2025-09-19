@@ -19,19 +19,15 @@ router.get('/categories', async (req, res) => {
 
 // Get all part ads (with filtering)
 router.get('/', async (req, res) => {
-    // Removed carMark and year from destructuring since they no longer exist in the database
     const { subCategoryId, priceFrom, priceTo, location, condition } = req.query;
 
     const where = {};
 
     if (subCategoryId) where.subCategoryId = subCategoryId;
-    // Removed carMark filter - field no longer exists in database
     if (location) where.location = location;
     if (condition) {
         where.condition = { in: condition.split(',') };
     }
-
-    // Removed year filter - field no longer exists in database
     if (priceFrom) where.price = { ...where.price, gte: parseFloat(priceFrom) };
     if (priceTo) where.price = { ...where.price, lte: parseFloat(priceTo) };
 
@@ -52,14 +48,9 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const part = await prisma.partAd.findUnique({
-            where: { id },
-        });
-        if (part) {
-            res.json(part);
-        } else {
-            res.status(404).json({ message: 'Part not found' });
-        }
+        const part = await prisma.partAd.findUnique({ where: { id } });
+        if (part) res.json(part);
+        else res.status(404).json({ message: 'Part not found' });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching part ad', error: error.message });
     }
@@ -67,10 +58,8 @@ router.get('/:id', async (req, res) => {
 
 // Create a new part ad
 router.post('/', authenticateToken, async (req, res) => {
+  console.log('Request body for new part ad:', req.body);
   try {
-    console.log('req.user:', req.user);
-    console.log('req.body:', req.body);
-
     const {
       name,
       price,
@@ -82,47 +71,59 @@ router.post('/', authenticateToken, async (req, res) => {
       compatibleModels,
       detailedCompatibility,
       installationDifficulty,
-      year, // The year comes in as a string or empty string
+      year,
       subCategory,
       'package': packageType
     } = req.body;
-    const ownerId = req.user.userId;
 
-    console.log('--- Creating new part ad ---');
-    console.log('Request body:', req.body);
+    const ownerId = req.user.userId;
 
     // Validate required fields
     if (!name || !price || !location || !phone || !condition || !description || !subCategory) {
-      return res.status(400).json({
+      const errorMessage = {
         message: 'Missing required fields',
         required: ['name', 'price', 'location', 'phone', 'condition', 'description', 'subCategory']
-      });
+      };
+      console.error('Validation Error:', errorMessage);
+      return res.status(400).json(errorMessage);
     }
 
+    // Trim subCategory
+    const cleanedSubCategory = subCategory.trim();
+
     const subCategoryRecord = await prisma.partSubCategory.findFirst({
-      where: { name: { equals: subCategory, mode: 'insensitive' } },
+      where: {
+        name: cleanedSubCategory
+      }
     });
 
-    console.log('Sub-category record:', subCategoryRecord);
-
     if (!subCategoryRecord) {
-      return res.status(400).json({ message: 'Invalid sub-category' });
+      const availableSubCategories = await prisma.partSubCategory.findMany({
+        select: {
+          name: true,
+        },
+      });
+      const errorMessage = { 
+        message: `Invalid sub-category: ${subCategory}`,
+        availableSubCategories: availableSubCategories.map(sc => sc.name),
+      };
+      console.error('Validation Error:', errorMessage);
+      return res.status(400).json(errorMessage);
     }
 
     const parsedPrice = parseFloat(price);
-    console.log('Parsed price:', parsedPrice);
-
     if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).json({ message: 'Invalid price value' });
+      const errorMessage = { message: 'Invalid price value' };
+      console.error('Validation Error:', errorMessage);
+      return res.status(400).json(errorMessage);
     }
 
-    // --- FIX STARTS HERE ---
-    // Handle the year value properly. If it's an empty string or not a valid number, set it to null.
     const parsedYear = year ? parseInt(year, 10) : null;
     if (year && isNaN(parsedYear)) {
-        return res.status(400).json({ message: 'Invalid year value' });
+        const errorMessage = { message: 'Invalid year value' };
+        console.error('Validation Error:', errorMessage);
+        return res.status(400).json(errorMessage);
     }
-    // --- FIX ENDS HERE ---
 
     const dataToSave = {
       name: String(name).trim(),
@@ -135,40 +136,34 @@ router.post('/', authenticateToken, async (req, res) => {
       compatibleModels: compatibleModels ? String(compatibleModels).trim() : null,
       detailedCompatibility: detailedCompatibility ? String(detailedCompatibility).trim() : null,
       installationDifficulty: installationDifficulty ? String(installationDifficulty).trim() : null,
-      year: parsedYear, // Use the correctly parsed year
+      year: parsedYear,
       package: packageType ? String(packageType).trim() : null,
       seller: { connect: { id: ownerId } },
       subCategory: { connect: { id: subCategoryRecord.id } },
     };
 
-    console.log('Data to save:', dataToSave);
-
-    const newPartAd = await prisma.partAd.create({
-      data: dataToSave,
-    });
-
-    console.log('--- Part ad created successfully ---');
+    const newPartAd = await prisma.partAd.create({ data: dataToSave });
     res.status(201).json(newPartAd);
   } catch (error) {
-    console.error('--- Error creating part ad ---');
-    console.error('Error details:', error);
+    console.error('Error creating part ad:', error);
 
-    // Handle Prisma-specific errors
     if (error.code === 'P2002') {
-      return res.status(400).json({ message: 'Duplicate entry detected' });
+      const errorMessage = { message: 'Duplicate entry detected' };
+      console.error('Database Error:', errorMessage);
+      return res.status(400).json(errorMessage);
     }
     if (error.code === 'P2003') {
-      return res.status(400).json({ message: 'Foreign key constraint failed' });
+      const errorMessage = { message: 'Foreign key constraint failed' };
+      console.error('Database Error:', errorMessage);
+      return res.status(400).json(errorMessage);
     }
     if (error.code === 'P2025') {
-      return res.status(404).json({ message: 'Related record not found' });
+      const errorMessage = { message: 'Related record not found' };
+      console.error('Database Error:', errorMessage);
+      return res.status(404).json(errorMessage);
     }
 
-    res.status(500).json({
-      message: 'Error creating part ad',
-      error: error.message,
-      code: error.code || 'UNKNOWN_ERROR'
-    });
+    res.status(500).json({ message: 'Error creating part ad', error: error.message, code: error.code || 'UNKNOWN_ERROR' });
   }
 });
 

@@ -220,6 +220,7 @@ const MyAcc = () => {
         <div className="welcome-actions">
           <button className="action-btn primary" onClick={() => navigate('/vehicle-ads')}>Browse Vehicle Ads</button>
           <button className="action-btn secondary" onClick={() => setCurrentView('adCreation')}>Place Your Ad</button>
+          <button className="action-btn tertiary" onClick={() => navigate('/saved-items')}>Saved Items</button>
         </div>
         <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </div>

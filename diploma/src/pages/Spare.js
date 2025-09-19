@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { FaCar, FaCog, FaTools, FaSprayCan, FaWhmcs, FaPlug, FaScrewdriver, FaInfoCircle, FaQuestionCircle, FaShoppingCart } from 'react-icons/fa';
+import { FaCar, FaCog, FaTools, FaSprayCan, FaWhmcs, FaPlug, FaScrewdriver, FaInfoCircle, FaQuestionCircle, FaShoppingCart, FaBookmark } from 'react-icons/fa';
+import api from './../api';
 import './../pagestyle/Spare.css';
 
 const Spare = () => {
@@ -37,6 +38,33 @@ const Spare = () => {
                 console.error('Invalid token:', error);
             }
         }
+    }, []);
+
+    const [categories, setCategories] = useState([]);
+
+    const categoryIcons = {
+        'Engine Parts': <FaCog />,
+        'Brake System': <FaCar />,
+        'Suspension': <FaWhmcs />,
+        'Exhaust System': <FaScrewdriver />,
+        'Transmission': <FaCog />,
+        'Electrical': <FaPlug />,
+        'Body Parts': <FaCar />,
+        'Interior': <FaInfoCircle />,
+        'Wheels & Tires': <FaQuestionCircle />,
+        'Accessories': <FaShoppingCart />,
+    };
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('/parts/categories');
+                setCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        fetchCategories();
     }, []);
 
     const vehicleData = {
@@ -77,117 +105,36 @@ const Spare = () => {
 
     const albanianCities = ['Tirana', 'Durres', 'Vlora', 'Shkoder', 'Fier', 'Korce', 'Elbasan', 'Berat', 'Lushnje', 'Kavaje', 'Gjirokaster', 'Sarande'];
 
-    const categories = [
-        {
-            id: 1,
-            name: 'Engine Parts',
-            icon: <FaCog />,
-            subCategories: [
-                { id: 101, name: 'Filters' },
-                { id: 102, name: 'Belts & Chains' },
-                { id: 103, name: 'Gaskets & Seals' }
-            ]
-        },
-        {
-            id: 2,
-            name: 'Brake System',
-            icon: <FaCar />,
-            subCategories: [
-                { id: 201, name: 'Brake Pads' },
-                { id: 202, name: 'Brake Discs' },
-                { id: 203, name: 'Calipers' }
-            ]
-        },
-        {
-            id: 3,
-            name: 'Suspension',
-            icon: <FaWhmcs />,
-            subCategories: [
-                { id: 301, name: 'Shock Absorbers' },
-                { id: 302, name: 'Control Arms' },
-                { id: 303, name: 'Ball Joints' }
-            ]
-        },
-        {
-            id: 4,
-            name: 'Exhaust System',
-            icon: <FaScrewdriver />,
-            subCategories: [
-                { id: 401, name: 'Mufflers' },
-                { id: 402, name: 'Catalytic Converters' },
-                { id: 403, name: 'Exhaust Pipes' }
-            ]
-        },
-        {
-            id: 5,
-            name: 'Transmission',
-            icon: <FaCog />,
-            subCategories: [
-                { id: 501, name: 'Clutch Kits' },
-                { id: 502, name: 'Flywheels' },
-                { id: 503, name: 'Gearboxes' }
-            ]
-        },
-        {
-            id: 6,
-            name: 'Electrical',
-            icon: <FaPlug />,
-            subCategories: [
-                { id: 601, name: 'Batteries' },
-                { id: 602, name: 'Alternators' },
-                { id: 603, name: 'Spark Plugs' }
-            ]
-        },
-        {
-            id: 7,
-            name: 'Body Parts',
-            icon: <FaCar />,
-            subCategories: [
-                { id: 701, name: 'Bumpers' },
-                { id: 702, name: 'Fenders' },
-                { id: 703, name: 'Doors' }
-            ]
-        },
-        {
-            id: 8,
-            name: 'Interior',
-            icon: <FaInfoCircle />,
-            subCategories: [
-                { id: 801, name: 'Seats' },
-                { id: 802, name: 'Dashboards' },
-                { id: 803, name: 'Floor Mats' }
-            ]
-        },
-        {
-            id: 9,
-            name: 'Wheels & Tires',
-            icon: <FaQuestionCircle />,
-            subCategories: [
-                { id: 901, name: 'Tires' },
-                { id: 902, name: 'Rims' },
-                { id: 903, name: 'Hubcaps' }
-            ]
-        },
-        {
-            id: 10,
-            name: 'Accessories',
-            icon: <FaShoppingCart />,
-            subCategories: [
-                { id: 1001, name: 'Car Covers' },
-                { id: 1002, name: 'Phone Holders' },
-                { id: 1003, name: 'Roof Racks' }
-            ]
-        }
-    ];
+
 
     const fetchParts = useCallback(async () => {
         if (!selectedSubCategory) return;
         try {
-            const response = await axios.get('/db.json');
-            let parts = response.data.parts.filter(p => p.subCategoryId === selectedSubCategory.id);
+            const dbJsonResponse = await axios.get('/db.json');
+            const partsFromDbJson = dbJsonResponse.data.parts || [];
+            partsFromDbJson.forEach(part => part.isStatic = true);
+
+            const apiResponse = await api.get('/parts');
+            const partsFromApi = apiResponse.data || [];
+
+            const allPartsMap = new Map();
+            // Add all static parts
+            partsFromDbJson.forEach(part => allPartsMap.set(part.id, part));
+
+            // Add only parts created by the current user from API
+            const userCreatedParts = partsFromApi.filter(part => part.sellerId === userId);
+            userCreatedParts.forEach(part => allPartsMap.set(part.id, part));
+
+            let mergedParts = Array.from(allPartsMap.values());
+            console.log('Selected SubCategory ID for filtering:', selectedSubCategory.id);
+            mergedParts = mergedParts.filter(p => {
+                console.log('Comparing part:', p.name, 'SubCategory ID:', p.subCategoryId, 'Is Static:', p.isStatic, 'Match:', p.subCategoryId === selectedSubCategory.id);
+                return p.subCategoryId === selectedSubCategory.id;
+            });
+
             const storedParts = JSON.parse(localStorage.getItem('parts'));
             if (storedParts) {
-                parts = parts.map(part => {
+                mergedParts = mergedParts.map(part => {
                     const storedPart = storedParts.find(p => p.id === part.id);
                     if (storedPart) {
                         return { ...part, reserved: storedPart.reserved };
@@ -195,8 +142,8 @@ const Spare = () => {
                     return part;
                 });
             }
-            setInitialParts(parts);
-            setParts(parts);
+            setInitialParts(mergedParts);
+            setParts(mergedParts);
         } catch (error) {
             console.error("Error fetching parts:", error);
         }
@@ -352,31 +299,52 @@ const Spare = () => {
         }
     };
 
-    const renderCategories = () => {
-        const leftColumn = categories.slice(0, 5);
-        const rightColumn = categories.slice(5, 10);
+    const handleSave = async (partAdId) => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('Please log in to save items.');
+            return;
+        }
 
+        try {
+            await api.post('/saved-items', { partAdId: String(partAdId) }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            alert('Part saved successfully!');
+        } catch (error) {
+            if (error.response?.status === 409) {
+                alert('You have already saved this part.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to save part.');
+            }
+        }
+    };
+
+    const handleSaveStatic = (part) => {
+        const savedStaticParts = JSON.parse(localStorage.getItem('savedStaticParts')) || [];
+        if (savedStaticParts.find(p => p.id === part.id)) {
+            alert('You have already saved this part.');
+            return;
+        }
+        savedStaticParts.push(part);
+        localStorage.setItem('savedStaticParts', JSON.stringify(savedStaticParts));
+        alert('Part saved successfully! (simulated)');
+    };
+
+    const renderCategories = () => {
         return (
             <div>
                 <h1 className="main-title">Automotive Parts</h1>
                 <div className="title-underline"></div>
-                <div style={{ display: 'flex' }}>
-                    <div style={{ flex: '50%' }}>
-                        {leftColumn.map(category => (
-                            <div key={category.id} className="category-card" onClick={() => handleCategoryClick(category)}>
-                                <div className="category-icon">{category.icon}</div>
-                                <h3>{category.name}</h3>
-                            </div>
-                        ))}
-                    </div>
-                    <div style={{ flex: '50%' }}>
-                        {rightColumn.map(category => (
-                            <div key={category.id} className="category-card" onClick={() => handleCategoryClick(category)}>
-                                <div className="category-icon">{category.icon}</div>
-                                <h3>{category.name}</h3>
-                            </div>
-                        ))}
-                    </div>
+                <div className="category-grid"> {/* Use a grid for better layout */}
+                    {categories.map(category => (
+                        <div key={category.id} className="category-card" onClick={() => handleCategoryClick(category)}>
+                            <div className="category-icon">{categoryIcons[category.name]}</div>
+                            <h3>{category.name}</h3>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
@@ -523,6 +491,7 @@ const Spare = () => {
                     </div>
                     <div className="reserve-btn-container">
                         {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>}
+                        <button className="save-btn" onClick={() => selectedPart.isStatic ? handleSaveStatic(selectedPart) : handleSave(selectedPart.id)}><FaBookmark /> Save</button>
                         {selectedPart.reserved && selectedPart.reservedBy === userId && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>Cancel Reservation</button>}
                     </div>
                     <div className="description-section">

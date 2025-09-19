@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaCheckCircle, FaQuestionCircle, FaTimesCircle, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle, FaPhone, FaMapMarkerAlt, FaBookmark } from 'react-icons/fa';
 import axios from 'axios';
 import VehicleForm from './../components/VehicleForm';
 import api from './../api';
@@ -202,13 +202,13 @@ const VehicleAds = () => {
   };
 
   const vehicleData = {
-    car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'] } },
+    car: { marks: ['Mercedes-Benz', 'BMW', 'Audi', 'Ford', 'Toyota', 'Renault', 'Volkswagen', 'Skoda', 'Land Rover', 'Mazda', 'Volvo', 'Nissan', 'Tesla'], models: { 'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class'], 'BMW': ['3 Series', '5 Series', 'X5'], 'Audi': ['A4', 'A6', 'Q7'], 'Ford': ['Focus', 'Fiesta', 'Mondeo'], 'Toyota': ['Corolla', 'Camry', 'RAV4'], 'Renault': ['Clio', 'Megane', 'Captur'], 'Volkswagen': ['Golf', 'Passat', 'Tiguan'], 'Skoda': ['Octavia', 'Superb', 'Kodiaq'], 'Land Rover': ['Range Rover', 'Defender', 'Discovery'], 'Mazda': ['Mazda3', 'Mazda6', 'CX-5'], 'Volvo': ['XC90', 'S60', 'V60'], 'Nissan': ['Qashqai', 'Juke', 'X-Trail'], 'Tesla': ['Model S', 'Model 3', 'Model X'] } },
     van: { marks: ['Mercedes-Benz', 'Fiat', 'Opel', 'Renault', 'Iveco'], models: { 'Mercedes-Benz': ['Sprinter', 'Vito'], 'Fiat': ['Ducato', 'Doblo'], 'Opel': ['Vivaro', 'Movano'], 'Renault': ['Trafic', 'Master'], 'Iveco': ['Daily'] } },
     motorcycle: { marks: ['Honda', 'Yamaha', 'Suzuki', 'Ducati', 'KTM'], models: { 'Honda': ['CBR', 'Africa Twin'], 'Yamaha': ['MT-07', 'R1'], 'Suzuki': ['GSX-R', 'V-Strom'], 'Ducati': ['Panigale', 'Monster'], 'KTM': ['Duke', 'Adventure'] } }
   };
 
   const transmitorOptions = ['Manual', 'Automatic', 'Semi-Automatic'];
-  const fuelOptions = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
+  const fuelOptions = ['Petrol', 'Diesel', 'Gasoline', 'Electric', 'Hybrid'];
   const colourOptions = ['Black', 'White', 'Silver', 'Blue', 'Red', 'Green', 'Yellow'];
   const albanianCities = ['Tirana', 'Durres', 'Vlora', 'Shkoder', 'Fier', 'Korce', 'Elbasan', 'Berat', 'Lushnje', 'Kavaje', 'Gjirokaster', 'Sarande'];
 
@@ -464,6 +464,40 @@ const VehicleAds = () => {
     }
   };
 
+  const handleSave = async (vehicleAdId) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+        alert('Please log in to save items.');
+        return;
+    }
+
+    try {
+        await api.post('/saved-items', { vehicleAdId: String(vehicleAdId) }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        alert('Vehicle saved successfully!');
+    } catch (error) {
+        if (error.response?.status === 409) {
+            alert('You have already saved this vehicle.');
+        } else {
+            alert(error.response?.data?.message || 'Failed to save vehicle.');
+        }
+    }
+  };
+
+  const handleSaveStatic = (vehicle) => {
+    const savedStaticVehicles = JSON.parse(localStorage.getItem('savedStaticVehicles')) || [];
+    if (savedStaticVehicles.find(v => v.id === vehicle.id)) {
+        alert('You have already saved this vehicle.');
+        return;
+    }
+    savedStaticVehicles.push(vehicle);
+    localStorage.setItem('savedStaticVehicles', JSON.stringify(savedStaticVehicles));
+    alert('Vehicle saved successfully! (simulated)');
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -572,7 +606,9 @@ const VehicleAds = () => {
                       {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
                       
                     </div>
+                    
                     {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
+
                   </div>
                 </div>
                 {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
@@ -584,6 +620,7 @@ const VehicleAds = () => {
                 <img src={selectedVehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={selectedVehicle.name} />
               </div>
               {selectedVehicle.insuranceBaseRate && <InsuranceCalculator baseRate={selectedVehicle.insuranceBaseRate} />}
+              <button className="save-btn save-btn-styled" onClick={() => selectedVehicle.isStatic ? handleSaveStatic(selectedVehicle) : handleSave(selectedVehicle.id)}><FaBookmark /> Save</button>
             </div>
           </div>
           {showReserveModal && <ReservationModal vehicle={selectedVehicle} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
