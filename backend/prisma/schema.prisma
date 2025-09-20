@@ -95,6 +95,10 @@ model PartAd {
   year                    Int?
   package                 String?
   savedBy                 SavedPartAd[]
+
+  carMark                 String?
+  carModel                String?
+  vehicleType             String?
 }
 
 model Review {

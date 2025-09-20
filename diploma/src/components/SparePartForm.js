@@ -22,7 +22,6 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
           name: '',
           category: '',
           subCategory: '',
-          compatibleModels: '',
           condition: 'New',
           location: '',
           description: '',
@@ -31,6 +30,10 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
           year: '',
           price: '',
           phone: '',
+          sellerName: '',
+          vehicleType: '',
+          carMark: '',
+          carModel: '',
         }
   );
   const [image, setImage] = useState(null);
@@ -58,6 +61,7 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('formData:', formData);
     onFormSubmit(formData, image);
   };
 
@@ -73,8 +77,22 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
           <h3>Part Details</h3>
           <div className="form-row">
             <div>
-              <label htmlFor="name">Ad Name</label>
+              <label htmlFor="name">Part Name</label>
               <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div>
+              <label htmlFor="vehicleType">Vehicle Type</label>
+              <input id="vehicleType" type="text" name="vehicleType" value={formData.vehicleType} onChange={handleChange} required />
+            </div>
+            <div>
+              <label htmlFor="carMark">Mark</label>
+              <input id="carMark" type="text" name="carMark" value={formData.carMark} onChange={handleChange} required />
+            </div>
+            <div>
+              <label htmlFor="carModel">Model</label>
+              <input id="carModel" type="text" name="carModel" value={formData.carModel} onChange={handleChange} required />
             </div>
           </div>
           <div className="form-row">
@@ -95,12 +113,6 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
                   <option key={subCat.name} value={subCat.name}>{subCat.name}</option>
                 ))}
               </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div>
-              <label htmlFor="compatibleModels">Compatible Car Models</label>
-              <input id="compatibleModels" type="text" name="compatibleModels" value={formData.compatibleModels} onChange={handleChange} required />
             </div>
             <div>
               <label htmlFor="condition">Condition</label>
@@ -141,6 +153,10 @@ const SparePartForm = ({ selectedPackage, adType, onFormSubmit, onBack, initialD
         <div className="form-section seller-info-section">
           <h3>Seller Information</h3>
           <div className="form-row">
+            <div>
+              <label htmlFor="sellerName">Name</label>
+              <input id="sellerName" type="text" name="sellerName" value={formData.sellerName} onChange={handleChange} required />
+            </div>
             <div>
               <label htmlFor="location">Location</label>
               <input id="location" type="text" name="location" value={formData.location} onChange={handleChange} required />

@@ -73,7 +73,10 @@ router.post('/', authenticateToken, async (req, res) => {
       installationDifficulty,
       year,
       subCategory,
-      'package': packageType
+      'package': packageType,
+      carMark,
+      carModel,
+      vehicleType
     } = req.body;
 
     const ownerId = req.user.userId;
@@ -140,8 +143,12 @@ router.post('/', authenticateToken, async (req, res) => {
       package: packageType ? String(packageType).trim() : null,
       seller: { connect: { id: ownerId } },
       subCategory: { connect: { id: subCategoryRecord.id } },
+      carMark: carMark ? String(carMark).trim() : null,
+      carModel: carModel ? String(carModel).trim() : null,
+      vehicleType: vehicleType ? String(vehicleType).trim() : null,
     };
 
+    console.log('dataToSave:', dataToSave);
     const newPartAd = await prisma.partAd.create({ data: dataToSave });
     res.status(201).json(newPartAd);
   } catch (error) {
@@ -164,6 +171,34 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     res.status(500).json({ message: 'Error creating part ad', error: error.message, code: error.code || 'UNKNOWN_ERROR' });
+  }
+});
+
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const ownerId = req.user.userId;
+
+  try {
+    const partAd = await prisma.partAd.findUnique({
+      where: { id },
+    });
+
+    if (!partAd) {
+      return res.status(404).json({ message: 'Part ad not found' });
+    }
+
+    if (partAd.sellerId !== ownerId) {
+      return res.status(403).json({ message: 'You are not authorized to delete this ad' });
+    }
+
+    await prisma.partAd.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting part ad', error: error.message });
   }
 });
 

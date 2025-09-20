@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { FaCar, FaCog, FaTools, FaSprayCan, FaWhmcs, FaPlug, FaScrewdriver, FaInfoCircle, FaQuestionCircle, FaShoppingCart, FaBookmark } from 'react-icons/fa';
 import api from './../api';
 import './../pagestyle/Spare.css';
@@ -27,6 +26,7 @@ const Spare = () => {
     const [availableModels, setAvailableModels] = useState([]);
     const [savedSearches, setSavedSearches] = useState([]);
     const [userId, setUserId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -105,36 +105,17 @@ const Spare = () => {
 
     const albanianCities = ['Tirana', 'Durres', 'Vlora', 'Shkoder', 'Fier', 'Korce', 'Elbasan', 'Berat', 'Lushnje', 'Kavaje', 'Gjirokaster', 'Sarande'];
 
-
-
     const fetchParts = useCallback(async () => {
         if (!selectedSubCategory) return;
         try {
-            const dbJsonResponse = await axios.get('/db.json');
-            const partsFromDbJson = dbJsonResponse.data.parts || [];
-            partsFromDbJson.forEach(part => part.isStatic = true);
-
             const apiResponse = await api.get('/parts');
-            const partsFromApi = apiResponse.data || [];
+            let partsFromApi = apiResponse.data || [];
 
-            const allPartsMap = new Map();
-            // Add all static parts
-            partsFromDbJson.forEach(part => allPartsMap.set(part.id, part));
-
-            // Add only parts created by the current user from API
-            const userCreatedParts = partsFromApi.filter(part => part.sellerId === userId);
-            userCreatedParts.forEach(part => allPartsMap.set(part.id, part));
-
-            let mergedParts = Array.from(allPartsMap.values());
-            console.log('Selected SubCategory ID for filtering:', selectedSubCategory.id);
-            mergedParts = mergedParts.filter(p => {
-                console.log('Comparing part:', p.name, 'SubCategory ID:', p.subCategoryId, 'Is Static:', p.isStatic, 'Match:', p.subCategoryId === selectedSubCategory.id);
-                return p.subCategoryId === selectedSubCategory.id;
-            });
+            partsFromApi = partsFromApi.filter(p => p.subCategoryId === selectedSubCategory.id);
 
             const storedParts = JSON.parse(localStorage.getItem('parts'));
             if (storedParts) {
-                mergedParts = mergedParts.map(part => {
+                partsFromApi = partsFromApi.map(part => {
                     const storedPart = storedParts.find(p => p.id === part.id);
                     if (storedPart) {
                         return { ...part, reserved: storedPart.reserved };
@@ -142,8 +123,8 @@ const Spare = () => {
                     return part;
                 });
             }
-            setInitialParts(mergedParts);
-            setParts(mergedParts);
+            setInitialParts(partsFromApi);
+            setParts(partsFromApi);
         } catch (error) {
             console.error("Error fetching parts:", error);
         }
@@ -156,6 +137,8 @@ const Spare = () => {
     }, [view, selectedSubCategory, fetchParts, filters]);
 
     const handleSearch = () => {
+        console.log('initialParts:', initialParts);
+        console.log('filters:', filters);
         let filteredParts = [...initialParts];
         if (filters.vehicleType) {
             filteredParts = filteredParts.filter(p => p.vehicleType === filters.vehicleType);
@@ -184,6 +167,7 @@ const Spare = () => {
         if (filters.condition.length > 0) {
             filteredParts = filteredParts.filter(p => filters.condition.includes(p.condition));
         }
+        console.log('filteredParts:', filteredParts);
         setParts(filteredParts);
         setSearched(true);
     };
@@ -229,14 +213,7 @@ const Spare = () => {
     };
 
     const handleFilterChange = (filterName, value) => {
-        let processedValue = value;
-        if (filterName.includes('price')) {
-            processedValue = value ? Math.max(0, Number(value)) : '';
-        }
-        if (filterName.includes('year')) {
-            processedValue = value ? Math.max(1980, Number(value)) : '';
-        }
-        setFilters(prev => ({ ...prev, [filterName]: processedValue }));
+        setFilters(prev => ({ ...prev, [filterName]: value }));
     };
 
     const handleConditionChange = (condition) => {
@@ -322,15 +299,27 @@ const Spare = () => {
         }
     };
 
-    const handleSaveStatic = (part) => {
-        const savedStaticParts = JSON.parse(localStorage.getItem('savedStaticParts')) || [];
-        if (savedStaticParts.find(p => p.id === part.id)) {
-            alert('You have already saved this part.');
-            return;
+    const isOwner = (part) => {
+        console.log('part.sellerId:', part.sellerId);
+        console.log('userId:', userId);
+        return part.sellerId === userId;
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this ad?')) {
+            try {
+                await api.delete(`/parts/${id}`);
+                setInitialParts(prevParts => prevParts.filter(p => p.id !== id));
+                setParts(prevParts => prevParts.filter(p => p.id !== id));
+            } catch (error) {
+                alert(error.response?.data?.message || 'Failed to delete ad.');
+            }
         }
-        savedStaticParts.push(part);
-        localStorage.setItem('savedStaticParts', JSON.stringify(savedStaticParts));
-        alert('Part saved successfully! (simulated)');
+    };
+
+    const handleModify = (part) => {
+        // For now, just log the part to be modified
+        console.log('Modify part:', part);
     };
 
     const renderCategories = () => {
@@ -364,154 +353,176 @@ const Spare = () => {
         </div>
     );
 
-    const renderParts = () => (
-        <div className="parts-view" style={{ display: 'flex' }}>
-            <div className="filters-sidebar" style={{ flex: '35%' }}>
-                <button className="back-btn" onClick={() => { setView('subcategories'); setParts([]); }}>← Back to Sub-categories</button>
-                <h3>FILTERS</h3>
-                
-                <label htmlFor="vehicleType">Vehicle Type</label>
-                <select id="vehicleType" value={filters.vehicleType} onChange={handleVehicleTypeChange}>
-                    <option value="">All Types</option>
-                    <option value="car">Car</option>
-                    <option value="van">Van</option>
-                    <option value="motorcycle">Motorcycle</option>
-                </select>
+    const renderParts = () => {
+        const itemsPerPage = 5;
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        const currentItems = parts.slice(indexOfFirstItem, indexOfLastItem);
 
-                <label htmlFor="carMark">Mark</label>
-                <select id="carMark" value={filters.carMark} onChange={handleMarkChange} disabled={!filters.vehicleType}>
-                    <option value="">All Marks</option>
-                    {availableMarks.map(mark => <option key={mark} value={mark}>{mark}</option>)}
-                </select>
+        return (
+            <div className="parts-view" style={{ display: 'flex' }}>
+                <div className="filters-sidebar" style={{ flex: '35%' }}>
+                    <button className="back-btn" onClick={() => { setView('subcategories'); setParts([]); }}>← Back to Sub-categories</button>
+                    <h3>FILTERS</h3>
+                    
+                    <label htmlFor="vehicleType">Vehicle Type</label>
+                    <select id="vehicleType" value={filters.vehicleType} onChange={handleVehicleTypeChange}>
+                        <option value="">All Types</option>
+                        <option value="car">Car</option>
+                        <option value="van">Van</option>
+                        <option value="motorcycle">Motorcycle</option>
+                    </select>
 
-                <label htmlFor="carModel">Model</label>
-                <select id="carModel" value={filters.carModel} onChange={e => handleFilterChange('carModel', e.target.value)} disabled={!filters.carMark}>
-                    <option value="">All Models</option>
-                    {availableModels.map(model => <option key={model} value={model}>{model}</option>)}
-                </select>
+                    <label htmlFor="carMark">Mark</label>
+                    <select id="carMark" value={filters.carMark} onChange={handleMarkChange} disabled={!filters.vehicleType}>
+                        <option value="">All Marks</option>
+                        {availableMarks.map(mark => <option key={mark} value={mark}>{mark}</option>)}
+                    </select>
 
-                <label>Year Range</label>
-                <div className="range-inputs">
-                    <input type="number" placeholder="From" value={filters.yearFrom} onChange={e => handleFilterChange('yearFrom', e.target.value)} />
-                    <input type="number" placeholder="To" value={filters.yearTo} onChange={e => handleFilterChange('yearTo', e.target.value)} />
-                </div>
+                    <label htmlFor="carModel">Model</label>
+                    <select id="carModel" value={filters.carModel} onChange={e => handleFilterChange('carModel', e.target.value)} disabled={!filters.carMark}>
+                        <option value="">All Models</option>
+                        {availableModels.map(model => <option key={model} value={model}>{model}</option>)}
+                    </select>
 
-                <label>Price Range (€)</label>
-                <div className="range-inputs">
-                    <input type="number" placeholder="From" value={filters.priceFrom} onChange={e => handleFilterChange('priceFrom', e.target.value)} />
-                    <input type="number" placeholder="To" value={filters.priceTo} onChange={e => handleFilterChange('priceTo', e.target.value)} />
-                </div>
-
-                <label>Condition</label>
-                <div className="checkbox-group">
-                    <input type="checkbox" id="conditionNew" checked={filters.condition.includes('New')} onChange={() => handleConditionChange('New')} />
-                    <label htmlFor="conditionNew">New</label>
-                    <input type="checkbox" id="conditionUsed" checked={filters.condition.includes('Used')} onChange={() => handleConditionChange('Used')} />
-                    <label htmlFor="conditionUsed">Used</label>
-                </div>
-
-                <button onClick={handleSearch}>Search</button>
-                <button onClick={handleSaveSearch} className="save-search-btn">Save Search</button>
-
-                {savedSearches.length > 0 && (
-                    <div className="saved-searches">
-                        <h4>SAVED SEARCHES</h4>
-                        <ul>
-                            {savedSearches.map((search, index) => (
-                                <li key={index}>
-                                    <span>{search.name}</span>
-                                    <button onClick={() => handleLoadSearch(search)}>Load</button>
-                                    <button onClick={() => handleDeleteSearch(index)}>X</button>
-                                </li>
-                            ))}
-                        </ul>
+                    <label>Year Range</label>
+                    <div className="range-inputs">
+                        <input type="number" placeholder="From" value={filters.yearFrom} onChange={e => handleFilterChange('yearFrom', e.target.value)} />
+                        <input type="number" placeholder="To" value={filters.yearTo} onChange={e => handleFilterChange('yearTo', e.target.value)} />
                     </div>
-                )}
-            </div>
 
-            <div className="parts-list" style={{ flex: '65%' }}>
-                <h2>{selectedSubCategory.name}</h2>
-                <p>{parts.length} parts found</p>
-                <div className="part-cards">
-                    {parts.map(part => (
-                        <div key={part.id} className={`part-card ${part.reserved ? 'reserved' : ''}`} onClick={() => !part.reserved && handlePartClick(part)}>
-                            
-                            {part.reserved && <div className="reserved-badge">Reserved</div>}
-                            <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
-                            <div className="part-details">
-                                <div className="part-name">{part.name}</div>
-                                <div className="part-vehicle-info">{`${part.vehicleType} - ${part.carMark} ${part.carModel}`}</div>
-                                <div className="part-price">€{part.price}</div>
-                                <div className="part-card-footer">
+                    <label>Price Range (€)</label>
+                    <div className="range-inputs">
+                        <input type="number" placeholder="From" value={filters.priceFrom} onChange={e => handleFilterChange('priceFrom', e.target.value)} />
+                        <input type="number" placeholder="To" value={filters.priceTo} onChange={e => handleFilterChange('priceTo', e.target.value)} />
+                    </div>
+
+                    <label>Condition</label>
+                    <div className="checkbox-group">
+                        <input type="checkbox" id="conditionNew" checked={filters.condition.includes('New')} onChange={() => handleConditionChange('New')} />
+                        <label htmlFor="conditionNew">New</label>
+                        <input type="checkbox" id="conditionUsed" checked={filters.condition.includes('Used')} onChange={() => handleConditionChange('Used')} />
+                        <label htmlFor="conditionUsed">Used</label>
+                    </div>
+
+                    <button onClick={handleSearch}>Search</button>
+                    <button onClick={handleSaveSearch} className="save-search-btn">Save Search</button>
+
+                    {savedSearches.length > 0 && (
+                        <div className="saved-searches">
+                            <h4>SAVED SEARCHES</h4>
+                            <ul>
+                                {savedSearches.map((search, index) => (
+                                    <li key={index}>
+                                        <span>{search.name}</span>
+                                        <button onClick={() => handleLoadSearch(search)}>Load</button>
+                                        <button onClick={() => handleDeleteSearch(index)}>X</button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+
+                <div className="parts-list" style={{ flex: '65%' }}>
+                    <h2>{selectedSubCategory.name}</h2>
+                    <p>{parts.length} parts found</p>
+                    <div className="part-cards">
+                        {currentItems.map(part => (
+                            <div key={part.id} className={`part-card ${part.reserved ? 'reserved' : ''} ${part.package === 'premium' ? 'premium' : ''}`} onClick={() => !part.reserved && handlePartClick(part)}>
+                                
+                                {part.reserved && <div className="reserved-badge">Reserved</div>}
+                                <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
+                                <div className="part-details">
+                                    <div className="part-name">{part.name}</div>
+                                    {part.vehicleType && part.carMark && part.carModel && (
+                                        <div className="part-vehicle-info">{`${part.vehicleType} - ${part.carMark} ${part.carModel}`}</div>
+                                    )}
+                                    <div className="part-price">€{part.price}</div>
                                     <div className="part-location-phone">{`${part.location} • ${part.phone} • ${part.year}`}</div>
+                                    <div className="ad-actions">
+                                        {isOwner(part) && (
+                                            <>
+                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(part)}}>Modify</button>
+                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(part.id)}}>Delete</button>
+                                            </>
+                                        )}
+                                    </div>
                                     {part.reserved && part.reservedBy === userId && <button className="cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(part);}}>Cancel Reservation</button>}
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+                    <div className="pagination">
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Previous</button>
+                        <span>Page {currentPage} of {Math.ceil(parts.length / itemsPerPage)}</span>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(parts.length / itemsPerPage)))} disabled={currentPage === Math.ceil(parts.length / itemsPerPage)}>Next</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
-    const renderPartDetail = () => (
-        <div className="part-detail-view">
-            <button className="back-btn" onClick={() => setSelectedPart(null)}>← Back to Parts</button>
-            <div className="part-detail-content">
-                <div className="part-detail-left">
-                    <h2>{selectedPart.name}</h2>
-                    <div className="spec-section">
-                        <h2>Spare Info</h2>
-                        <div className="spec-grid">
-                            <div className="spec-item">
-                                <span className="spec-label">Category:</span>
-                                <span className="spec-value">{selectedSubCategory.name}</span>
-                            </div>
-                            <div className="spec-item">
-                                <span className="spec-label">Compatible with:</span>
-                                <span className="spec-value">{selectedPart.carMark} {selectedPart.carModel}</span>
-                            </div>
-                            <div className="spec-item">
-                                <span className="spec-label">Condition:</span>
-                                <span className="spec-value">{selectedPart.condition}</span>
-                            </div>
-                            <div className="spec-item">
-                                <span className="spec-label">Location:</span>
-                                <span className="spec-value">{selectedPart.location}</span>
-                            </div>
-                            <div className="spec-item">
-                                <span className="spec-label">Year:</span>
-                                <span className="spec-value">{selectedPart.year}</span>
-                            </div>
-                            <div className="spec-item">
-                                <span className="spec-label">Price:</span>
-                                <span className="spec-value">€{selectedPart.price}</span>
+    const renderPartDetail = () => {
+        console.log('selectedPart:', selectedPart);
+        return (
+            <div className="part-detail-view">
+                <button className="back-btn" onClick={() => setSelectedPart(null)}>← Back to Parts</button>
+                <div className="part-detail-content">
+                    <div className="part-detail-left">
+                        <h2>{selectedPart.name}</h2>
+                        <div className="spec-section">
+                            <h2>Spare Info</h2>
+                            <div className="spec-grid">
+                                                                                            <div className="spec-item">
+                                                                <span className="spec-label">Mark:</span>
+                                                                <span className="spec-value">{selectedPart.carMark}</span>
+                                                            </div>
+                                                            <div className="spec-item">
+                                                                <span className="spec-label">Model:</span>
+                                                                <span className="spec-value">{selectedPart.carModel}</span>
+                                                            </div>                                <div className="spec-item">
+                                    <span className="spec-label">Condition:</span>
+                                    <span className="spec-value">{selectedPart.condition}</span>
+                                </div>
+                                <div className="spec-item">
+                                    <span className="spec-label">Location:</span>
+                                    <span className="spec-value">{selectedPart.location}</span>
+                                </div>
+                                <div className="spec-item">
+                                    <span className="spec-label">Year:</span>
+                                    <span className="spec-value">{selectedPart.year}</span>
+                                </div>
+                                <div className="spec-item">
+                                    <span className="spec-label">Price:</span>
+                                    <span className="spec-value">€{selectedPart.price}</span>
+                                </div>
                             </div>
                         </div>
+                        <div className="reserve-btn-container">
+                            {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>}
+                            {selectedPart.reserved && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>Cancel Reservation</button>}
+                        </div>
+                        <div className="description-section">
+                            <h3>Description</h3>
+                            <p>{selectedPart.description}</p>
+                        </div>
+                        <div className="seller-info">
+                            <h3>Seller Information</h3>
+                            <p>Name: {selectedPart.sellerName}</p>
+                            
+                            <p>Contact: {selectedPart.phone}</p>
+                        </div>
                     </div>
-                    <div className="reserve-btn-container">
-                        {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>}
-                        <button className="save-btn" onClick={() => selectedPart.isStatic ? handleSaveStatic(selectedPart) : handleSave(selectedPart.id)}><FaBookmark /> Save</button>
-                        {selectedPart.reserved && selectedPart.reservedBy === userId && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>Cancel Reservation</button>}
-                    </div>
-                    <div className="description-section">
-                        <h3>Description</h3>
-                        <p>{selectedPart.description}</p>
+                    <div className="part-detail-right">
+                        <img src={selectedPart.imageUrl} alt={selectedPart.name} />
+                        <button className="save-btn" onClick={() => handleSave(selectedPart.id)}><FaBookmark /> Save</button>
                     </div>
                 </div>
-                <div className="part-detail-right">
-                    <img src={selectedPart.imageUrl} alt={selectedPart.name} />
-                    <div className="seller-info">
-                        <h3>Seller Information</h3>
-                        <p>Name: {selectedPart.sellerName}</p>
-                        
-                        <p>Contact: {selectedPart.phone}</p>
-                    </div>
-                </div>
+                {showReserveModal && <ReservationModal part={selectedPart} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
             </div>
-            {showReserveModal && <ReservationModal part={selectedPart} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
-        </div>
-    );
+        );
+    };
 
     const ReservationModal = ({ part, onClose, onSubmit }) => {
         const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
