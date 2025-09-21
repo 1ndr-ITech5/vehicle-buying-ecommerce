@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCar, FaCog, FaTools, FaSprayCan, FaWhmcs, FaPlug, FaScrewdriver, FaInfoCircle, FaQuestionCircle, FaShoppingCart, FaBookmark } from 'react-icons/fa';
 import api from './../api';
 import './../pagestyle/Spare.css';
 
 const Spare = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [view, setView] = useState('categories');
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
@@ -66,6 +69,22 @@ const Spare = () => {
         };
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const partId = params.get('partId');
+        if (partId) {
+            const fetchPart = async () => {
+                try {
+                    const response = await api.get(`/parts/${partId}`);
+                    setSelectedPart(response.data);
+                } catch (error) {
+                    console.error('Error fetching part:', error);
+                }
+            };
+            fetchPart();
+        }
+    }, [location.search]);
 
     const vehicleData = {
         car: {
@@ -322,6 +341,15 @@ const Spare = () => {
         console.log('Modify part:', part);
     };
 
+    const handleBackClick = () => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('from') === 'saved-items') {
+            navigate('/saved-items');
+        } else {
+            setSelectedPart(null);
+        }
+    };
+
     const renderCategories = () => {
         return (
             <div>
@@ -467,7 +495,7 @@ const Spare = () => {
         console.log('selectedPart:', selectedPart);
         return (
             <div className="part-detail-view">
-                <button className="back-btn" onClick={() => setSelectedPart(null)}>← Back to Parts</button>
+                <button className="back-btn" onClick={handleBackClick}>← Back to Parts</button>
                 <div className="part-detail-content">
                     <div className="part-detail-left">
                         <h2>{selectedPart.name}</h2>

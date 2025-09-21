@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaQuestionCircle, FaTimesCircle, FaPhone, FaMapMarkerAlt, FaBookmark } from 'react-icons/fa';
 import axios from 'axios';
 import VehicleForm from './../components/VehicleForm';
@@ -117,6 +117,7 @@ const ReservationModal = ({ vehicle, onClose, onSubmit }) => {
 
 const VehicleAds = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeVehicleCategory, setActiveVehicleCategory] = useState('car');
   const [filters, setFilters] = useState({ type: '', model: '', yearFrom: '', yearTo: '', priceFrom: '', priceTo: '', powerFrom: '', powerTo: '', mileageFrom: '', mileageTo: '', transmitor: '', fuel: '', colour: '', location: '' });
   const [sortBy, setSortBy] = useState('recent');
@@ -134,18 +135,6 @@ const VehicleAds = () => {
   const [showEditModal, setShowEditModal] = useState(false);
 
   const [userId, setUserId] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserId(payload.userId);
-      } catch (error) {
-        console.error('Invalid token:', error);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -235,6 +224,15 @@ const VehicleAds = () => {
       });
 
       let mergedVehicles = Array.from(allVehiclesMap.values());
+
+      if (location.state?.newAd) {
+        const newAd = location.state.newAd;
+        if (!mergedVehicles.find(v => v.id === newAd.id)) {
+          mergedVehicles = [newAd, ...mergedVehicles];
+        }
+        window.history.replaceState({}, document.title);
+      }
+
       const storedVehicles = JSON.parse(localStorage.getItem('vehicles'));
       if (storedVehicles) {
           mergedVehicles = mergedVehicles.map(vehicle => {
@@ -254,24 +252,13 @@ const VehicleAds = () => {
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
-  }, []);
+  }, [location.state?.newAd]);
 
   useEffect(() => {
     fetchAllVehicles();
   }, [fetchAllVehicles]);
 
-  useEffect(() => {
-    if (location.state?.newAd) {
-      const newAd = location.state.newAd;
-      setAllVehicles(prevVehicles => {
-        if (!prevVehicles.find(v => v.id === newAd.id)) {
-          return [newAd, ...prevVehicles];
-        }
-        return prevVehicles;
-      });
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state?.newAd]);
+
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -319,8 +306,13 @@ const VehicleAds = () => {
     setFilters(prev => ({ ...prev, [filterName]: processedValue }));
   };
 
+  useEffect(() => {
+    handleSearch();
+  }, [sortBy]);
+
   const handleSearch = () => {
     let filteredVehicles = [...allVehicles];
+
     // Filtering
     if (filters.type) {
         filteredVehicles = filteredVehicles.filter(v => v.make === filters.type);
@@ -368,6 +360,26 @@ const VehicleAds = () => {
         filteredVehicles = filteredVehicles.filter(v => v.vehicleCategory === activeVehicleCategory);
     }
 
+    if (sortBy === 'premium') {
+        filteredVehicles = filteredVehicles.filter(v => v.package === 'premium');
+    } else if (sortBy !== 'all') {
+        filteredVehicles.sort((a, b) => {
+            if (sortBy === 'price_asc') {
+                return a.price - b.price;
+            }
+            if (sortBy === 'price_desc') {
+                return b.price - a.price;
+            }
+            if (sortBy === 'year_asc') {
+                return a.year - b.year;
+            }
+            if (sortBy === 'year_desc') {
+                return b.year - a.year;
+            }
+            return 0;
+        });
+    }
+
     setVehicles(filteredVehicles);
     setTotalPages(Math.ceil(filteredVehicles.length / 8));
     setCurrentPage(1);
@@ -378,6 +390,10 @@ const VehicleAds = () => {
     if (allVehicles.length > 0) {
         handleSearch();
     }
+  }, [activeVehicleCategory]);
+
+  useEffect(() => {
+    setSortBy('all');
   }, [activeVehicleCategory]);
 
   const handleVehicleCategoryChange = (category) => {
@@ -405,29 +421,7 @@ const VehicleAds = () => {
     localStorage.setItem('vehicleSearches', JSON.stringify(updatedSearches));
   };
 
-  useEffect(() => {
-    const sortedVehicles = [...vehicles].sort((a, b) => {
-      if (sortBy === 'price_asc') {
-        return a.price - b.price;
-      }
-      if (sortBy === 'price_desc') {
-        return b.price - a.price;
-      }
-      if (sortBy === 'year_asc') {
-        return a.year - b.year;
-      }
-      if (sortBy === 'year_desc') {
-        return b.year - a.year;
-      }
-      if (sortBy === 'recent') {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      }
-      return 0;
-    });
-    if (JSON.stringify(sortedVehicles) !== JSON.stringify(vehicles)) {
-      setVehicles(sortedVehicles);
-    }
-  }, [sortBy, vehicles]);
+
 
   const handleReserveClick = () => {
     const token = localStorage.getItem('accessToken');
@@ -502,6 +496,15 @@ const VehicleAds = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleBackClick = () => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('from') === 'saved-items') {
+      navigate('/saved-items');
+    } else {
+      setSelectedVehicle(null);
+    }
+  };
+
   return (
     <div className="vehicle-ads-container">
       {!selectedVehicle ? (
@@ -541,7 +544,8 @@ const VehicleAds = () => {
             <div className="sort-section">
               <label>Sort by:</label>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="recent">Recent Ads</option>
+                <option value="all">All</option>
+                <option value="premium">Premium Ads</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
                 <option value="year_asc">Year: Old to New</option>
@@ -587,7 +591,7 @@ const VehicleAds = () => {
         </div>
       ) : (
         <div className="vehicle-detail">
-          <div className="detail-header"><button className="back-button" onClick={() => setSelectedVehicle(null)}>← Back to List</button><h1>{selectedVehicle.name}</h1></div>
+          <div className="detail-header"><button className="back-button" onClick={handleBackClick}>← Back to List</button><h1>{selectedVehicle.name}</h1></div>
           <div className="detail-content">
             <div className="detail-left">
                 <div className="spec-section"><h2>Vehicle Specifications</h2><div className="spec-grid"><div className="spec-item"><span className="spec-label">Make:</span><span className="spec-value">{selectedVehicle.make}</span></div><div className="spec-item"><span className="spec-label">Model:</span><span className="spec-value">{selectedVehicle.model}</span></div><div className="spec-item"><span className="spec-label">Year:</span><span className="spec-value">{selectedVehicle.year}</span></div><div className="spec-item"><span className="spec-label">Engine:</span><span className="spec-value">{selectedVehicle.engine}</span></div><div className="spec-item"><span className="spec-label">Fuel:</span><span className="spec-value">{selectedVehicle.fuel}</span></div><div className="spec-item"><span className="spec-label">Mileage:</span><span className="spec-value">{selectedVehicle.mileage.toLocaleString()} km</span></div><div className="spec-item"><span className="spec-label">Gearbox:</span><span className="spec-value">{selectedVehicle.transmission}</span></div><div className="spec-item"><span className="spec-label">Colour:</span><span className="spec-value">{selectedVehicle.color}</span></div><div className="spec-item"><span className="spec-label">Car Plates:</span><span className="spec-value">{selectedVehicle.carPlates}</span></div><div className="spec-item"><span className="spec-label">Power:</span><span className="spec-value">{selectedVehicle.power} HP</span></div></div></div>

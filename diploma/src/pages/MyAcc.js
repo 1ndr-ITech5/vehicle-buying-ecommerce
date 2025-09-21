@@ -133,12 +133,12 @@ const MyAcc = () => {
         const { category, historyCheck, sellOnCredit, ...dataToSend } = adFormData;
         response = await api.post(
           '/vehicles',
-          { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit, vehicleCategory: category }
+          { ...dataToSend, "package": selectedPackage, imageUrl, historyCheck, sellOnCredit, vehicleCategory: category, createdAt: new Date().toISOString() }
         );
       } else {
         response = await api.post(
           '/parts',
-          { ...adFormData, "package": selectedPackage, imageUrl }
+          { ...adFormData, "package": selectedPackage, imageUrl, createdAt: new Date().toISOString() }
         );
       }
 

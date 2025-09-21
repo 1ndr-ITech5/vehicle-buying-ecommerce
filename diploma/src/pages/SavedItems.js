@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from './../api';
 import './../pagestyle/SavedItems.css';
 
@@ -7,6 +8,7 @@ const SavedItems = () => {
     const [savedPartAds, setSavedPartAds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchSavedItems = async () => {
@@ -40,7 +42,8 @@ const SavedItems = () => {
         fetchSavedItems();
     }, []);
 
-    const handleRemove = async (type, id, isStatic) => {
+    const handleRemove = async (type, id, isStatic, e) => {
+        e.stopPropagation(); 
         if (isStatic) {
             if (type === 'vehicle') {
                 const savedStaticVehicles = JSON.parse(localStorage.getItem('savedStaticVehicles')) || [];
@@ -90,6 +93,11 @@ const SavedItems = () => {
         return <div className="error-message">{error}</div>;
     }
 
+    const handlePartClick = (partAd) => {
+        navigate(`/spare-parts?partId=${partAd.id}&from=saved-items`);
+    };
+
+
     return (
         <div className="saved-items-container">
             <h1>My Saved Items</h1>
@@ -98,14 +106,16 @@ const SavedItems = () => {
                 {savedVehicleAds.length > 0 ? (
                     <div className="saved-items-grid">
                         {savedVehicleAds.map(item => (
-                            <div key={item.id} className="saved-item-card">
-                                <img src={item.vehicleAd.imageUrl || 'https://via.placeholder.com/300x200'} alt={item.vehicleAd.name} />
-                                <div className="item-info">
-                                    <h3>{item.vehicleAd.name}</h3>
-                                    <p>€{item.vehicleAd.price.toLocaleString()}</p>
-                                    <button onClick={() => handleRemove('vehicle', item.vehicleAd.id, item.isStatic)}>Remove</button>
+                            <Link key={item.vehicleAd.id} to={`/vehicle-ads?vehicleId=${item.vehicleAd.id}&from=saved-items`} className="saved-item-card-link">
+                                <div className="saved-item-card">
+                                    <img src={item.vehicleAd.imageUrl || 'https://via.placeholder.com/300x200'} alt={item.vehicleAd.name} />
+                                    <div className="item-info">
+                                        <h3>{item.vehicleAd.name}</h3>
+                                        <p>€{item.vehicleAd.price.toLocaleString()}</p>
+                                        <button onClick={(e) => handleRemove('vehicle', item.vehicleAd.id, item.isStatic, e)}>Remove</button>
+                                    </div>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 ) : (
@@ -117,12 +127,12 @@ const SavedItems = () => {
                 {savedPartAds.length > 0 ? (
                     <div className="saved-items-grid">
                         {savedPartAds.map(item => (
-                            <div key={item.id} className="saved-item-card">
+                            <div key={item.partAd.id} className="saved-item-card" onClick={() => handlePartClick(item.partAd)}>
                                 <img src={item.partAd.imageUrl || 'https://via.placeholder.com/300x200'} alt={item.partAd.name} />
                                 <div className="item-info">
                                     <h3>{item.partAd.name}</h3>
                                     <p>€{item.partAd.price.toLocaleString()}</p>
-                                    <button onClick={() => handleRemove('part', item.partAd.id, item.isStatic)}>Remove</button>
+                                    <button onClick={(e) => handleRemove('part', item.partAd.id, item.isStatic, e)}>Remove</button>
                                 </div>
                             </div>
                         ))}
