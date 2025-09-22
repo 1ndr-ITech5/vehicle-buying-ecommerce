@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./../compstyle/TopHeader.css";
+import { useTranslation } from "react-i18next";
 
 export default function TopHeader() {
-  const [language, setLanguage] = useState("AL");
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const handleLanguageChange = (lang) => {
-    setLanguage(lang); 
+    i18n.changeLanguage(lang);
     setOpen(false);
   };
 
@@ -16,7 +17,7 @@ export default function TopHeader() {
       <div className="top-header-container">
         {/* Left side - Login */}
         <Link to="/my-account" className="login-link">
-          Log in
+          {t('login')}
         </Link>
 
         {/* Language selector */}
@@ -27,37 +28,37 @@ export default function TopHeader() {
           >
             <img
               src={
-                language === "AL"
+                i18n.language === "al"
                   ? "https://flagcdn.com/w20/al.png"
                   : "https://flagcdn.com/w20/gb.png"
               }
               alt="flag"
             />
-            <span>{language === "AL" ?  "Shqip" : "English"}</span>
+            <span>{i18n.language === "al" ?  t("shqip") : t("english")}</span>
             <i className={`fas fa-chevron-down arrow ${open ? "up" : ""}`}></i>
           </button>
 
           {open && (
             <div className="dropdown">
               <button
-                onClick={() => handleLanguageChange("AL")}
+                onClick={() => handleLanguageChange("al")}
                 className="dropdown-item"
               >
                 <img
                   src="https://flagcdn.com/w20/al.png"
                   alt="Albanian flag"
                 />
-                Shqip
+                {t('shqip')}
               </button>
               <button
-                onClick={() => handleLanguageChange("EN")}
+                onClick={() => handleLanguageChange("en")}
                 className="dropdown-item"
               >
                 <img
                   src="https://flagcdn.com/w20/gb.png"
                   alt="English flag"
                 />
-                English
+                {t('english')}
               </button>
             </div>
           )}

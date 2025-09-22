@@ -2,8 +2,11 @@ import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "../assets/logo.jpg";
 import "./../compstyle/Header.css";
+import { useTranslation } from "react-i18next";
 
 export default function Header() {
+  const { t } = useTranslation();
+
   return (
     <nav className="main-header">
       <Link to="/" className="logo-link">
@@ -14,10 +17,10 @@ export default function Header() {
       </Link>
 
       <div className="nav-links">
-        <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>Home</NavLink>
-        <NavLink to="/vehicle-ads" className={({ isActive }) => (isActive ? "active" : "")}>Vehicle Ads</NavLink>
-        <NavLink to="/spare-parts" className={({ isActive }) => (isActive ? "active" : "")}>Automotive Parts</NavLink>
-        <NavLink to="/my-account" className={({ isActive }) => (isActive ? "active" : "")}>My Account</NavLink>
+        <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>{t('home')}</NavLink>
+        <NavLink to="/vehicle-ads" className={({ isActive }) => (isActive ? "active" : "")}>{t('vehicle_ads')}</NavLink>
+        <NavLink to="/spare-parts" className={({ isActive }) => (isActive ? "active" : "")}>{t('automotive_parts')}</NavLink>
+        <NavLink to="/my-account" className={({ isActive }) => (isActive ? "active" : "")}>{t('my_account')}</NavLink>
       </div>
     </nav>
   );

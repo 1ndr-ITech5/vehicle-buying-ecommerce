@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from './../api';
 import './../pagestyle/SavedItems.css';
+import { useTranslation } from 'react-i18next';
 
 const SavedItems = () => {
+    const { t } = useTranslation();
     const [savedVehicleAds, setSavedVehicleAds] = useState([]);
     const [savedPartAds, setSavedPartAds] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -34,13 +36,13 @@ const SavedItems = () => {
                 setSavedPartAds([...apiPartAds, ...staticPartAds.map(p => ({ partAd: p, isStatic: true }))]);
 
             } catch (err) {
-                setError(err.response?.data?.message || 'Failed to fetch saved items.');
+                setError(err.response?.data?.message || t('failed_to_fetch_saved_items'));
             }
             setLoading(false);
         };
 
         fetchSavedItems();
-    }, []);
+    }, [t]);
 
     const handleRemove = async (type, id, isStatic, e) => {
         e.stopPropagation(); 
@@ -56,12 +58,12 @@ const SavedItems = () => {
                 localStorage.setItem('savedStaticParts', JSON.stringify(updatedStaticParts));
                 setSavedPartAds(prev => prev.filter(item => item.partAd.id !== id));
             }
-            alert('Item removed successfully! (simulated)');
+            alert(t('item_removed_successfully'));
         } else {
             try {
                 const token = localStorage.getItem('accessToken');
                 if (!token) {
-                    alert('You must be logged in to perform this action.');
+                    alert(t('you_must_be_logged_in'));
                     return;
                 }
 
@@ -80,13 +82,13 @@ const SavedItems = () => {
                     setSavedPartAds(prev => prev.filter(item => item.partAd.id !== id));
                 }
             } catch (err) {
-                alert(err.response?.data?.message || 'Failed to remove item.');
+                alert(err.response?.data?.message || t('failed_to_remove_item'));
             }
         }
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div>{t('loading')}</div>;
     }
 
     if (error) {
@@ -100,9 +102,9 @@ const SavedItems = () => {
 
     return (
         <div className="saved-items-container">
-            <h1>My Saved Items</h1>
+            <h1>{t('my_saved_items')}</h1>
             <div className="saved-items-section">
-                <h2>Saved Vehicles</h2>
+                <h2>{t('saved_vehicles')}</h2>
                 {savedVehicleAds.length > 0 ? (
                     <div className="saved-items-grid">
                         {savedVehicleAds.map(item => (
@@ -112,18 +114,18 @@ const SavedItems = () => {
                                     <div className="item-info">
                                         <h3>{item.vehicleAd.name}</h3>
                                         <p>€{item.vehicleAd.price.toLocaleString()}</p>
-                                        <button onClick={(e) => handleRemove('vehicle', item.vehicleAd.id, item.isStatic, e)}>Remove</button>
+                                        <button onClick={(e) => handleRemove('vehicle', item.vehicleAd.id, item.isStatic, e)}>{t('remove')}</button>
                                     </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
                 ) : (
-                    <p>You have no saved vehicles.</p>
+                    <p>{t('no_saved_vehicles')}</p>
                 )}
             </div>
             <div className="saved-items-section">
-                <h2>Saved Parts</h2>
+                <h2>{t('saved_parts')}</h2>
                 {savedPartAds.length > 0 ? (
                     <div className="saved-items-grid">
                         {savedPartAds.map(item => (
@@ -132,13 +134,13 @@ const SavedItems = () => {
                                 <div className="item-info">
                                     <h3>{item.partAd.name}</h3>
                                     <p>€{item.partAd.price.toLocaleString()}</p>
-                                    <button onClick={(e) => handleRemove('part', item.partAd.id, item.isStatic, e)}>Remove</button>
+                                    <button onClick={(e) => handleRemove('part', item.partAd.id, item.isStatic, e)}>{t('remove')}</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <p>You have no saved parts.</p>
+                    <p>{t('no_saved_parts')}</p>
                 )}
             </div>
         </div>

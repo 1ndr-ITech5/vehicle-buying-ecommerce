@@ -4,11 +4,13 @@ import axios from 'axios';
 import './../pagestyle/Home.css';
 import homeImage from './../assets/jokic.avif';
 import NewVehicles from './../components/NewVehicles';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = 'http://localhost:3001/api';
 const SLIDES_TO_SHOW = 3;
 
 function Home() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [animate, setAnimate] = useState(false);
   const [filters, setFilters] = useState({ type: '', model: '', yearFrom: '', yearTo: '', priceFrom: '', priceTo: '', city: '' });
@@ -170,7 +172,7 @@ function Home() {
   };
 
   const handleDelete = async (reviewId) => {
-    if (window.confirm('Are you sure you want to delete this review?')) {
+    if (window.confirm(t('are_you_sure_delete_review'))) {
       try {
         await axios.delete(`${API_URL}/reviews/${reviewId}`);
         fetchReviews();
@@ -205,23 +207,23 @@ function Home() {
         {editingReview && (
             <div className="edit-modal">
                 <div className="edit-modal-content">
-                    <h3>Edit Review</h3>
+                    <h3>{t('edit_review')}</h3>
                     <form onSubmit={handleUpdateReview}>
                         <div className="comment-input">
-                            <label>Name:</label>
+                            <label>{t('name')}</label>
                             <input type="text" value={editingReview.name} onChange={(e) => setEditingReview({ ...editingReview, name: e.target.value })} />
                         </div>
                         <div className="comment-input">
-                            <label>Comment:</label>
+                            <label>{t('comment')}</label>
                             <textarea value={editingReview.comment} onChange={(e) => setEditingReview({ ...editingReview, comment: e.target.value })} rows="4"></textarea>
                         </div>
                         <div className="rating-input">
-                            <p>Rating:</p>
+                            <p>{t('rating')}</p>
                             <div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < editingReview.rating ? 'star filled' : 'star'} onClick={() => setEditingReview({ ...editingReview, rating: i + 1 })}>★</span>))}
                             </div>
                         </div>
-                        <button type="submit">Update Review</button>
-                        <button type="button" onClick={() => setEditingReview(null)}>Cancel</button>
+                        <button type="submit">{t('update_review')}</button>
+                        <button type="button" onClick={() => setEditingReview(null)}>{t('cancel')}</button>
                     </form>
                 </div>
             </div>
@@ -230,41 +232,41 @@ function Home() {
         <div className="image-container">
             <img src={homeImage} alt="Family in a car" className="home-image" />
             <div className={`image-text ${animate ? 'animate' : ''}`}>
-                <h1 className="new-quote">Find Your Next Adventure</h1>
-                <p className="new-quote-small">The best vehicles for the best price</p>
+                <h1 className="new-quote">{t('find_your_next_adventure')}</h1>
+                <p className="new-quote-small">{t('best_vehicles_best_price')}</p>
             </div>
         </div>
 
         <div className="overlay-box">
             <div className="search-form">
                 <div className="vehicle-tabs">
-                    <button className={`tab-btn ${activeVehicleCategory === 'car' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('car')}>🚗 Car</button>
-                    <button className={`tab-btn ${activeVehicleCategory === 'van' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('van')}>🚐 Van</button>
-                    <button className={`tab-btn ${activeVehicleCategory === 'motorcycle' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('motorcycle')}>🏍️ Motorcycle</button>
+                    <button className={`tab-btn ${activeVehicleCategory === 'car' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('car')}>🚗 {t('car')}</button>
+                    <button className={`tab-btn ${activeVehicleCategory === 'van' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('van')}>🚐 {t('van')}</button>
+                    <button className={`tab-btn ${activeVehicleCategory === 'motorcycle' ? 'active' : ''}`} onClick={() => setActiveVehicleCategory('motorcycle')}>🏍️ {t('motorcycle')}</button>
                 </div>
                 <div className="form-row">
-                    <div className="form-group"><label>Mark</label><select value={filters.type} onChange={handleMarkChange}><option value="">Select Mark</option>{vehicleData[activeVehicleCategory].marks.map(mark => (<option key={mark} value={mark}>{mark}</option>))}</select></div>
-                    <div className="form-group"><label>Model</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">Select Model</option>{availableModels.map(model => (<option key={model} value={model}>{model}</option>))}</select></div>
+                    <div className="form-group"><label>{t('mark')}</label><select value={filters.type} onChange={handleMarkChange}><option value="">{t('select_mark')}</option>{vehicleData[activeVehicleCategory].marks.map(mark => (<option key={mark} value={mark}>{mark}</option>))}</select></div>
+                    <div className="form-group"><label>{t('model')}</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">{t('select_model')}</option>{availableModels.map(model => (<option key={model} value={model}>{model}</option>))}</select></div>
                 </div>
                 <div className="form-row">
-                    <div className="form-group range-group"><label>Year</label><div className="range-inputs"><input type="text" placeholder="From" value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="text" placeholder="To" value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
-                    <div className="form-group range-group"><label>Price</label><div className="range-inputs"><input type="text" placeholder="From" value={filters.priceFrom} onChange={(e) => handleFilterChange('priceFrom', e.target.value)} /><input type="text" placeholder="To" value={filters.priceTo} onChange={(e) => handleFilterChange('priceTo', e.target.value)} /></div></div>
+                    <div className="form-group range-group"><label>{t('year')}</label><div className="range-inputs"><input type="text" placeholder={t('from')} value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="text" placeholder={t('to')} value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
+                    <div className="form-group range-group"><label>{t('price')}</label><div className="range-inputs"><input type="text" placeholder={t('from')} value={filters.priceFrom} onChange={(e) => handleFilterChange('priceFrom', e.target.value)} /><input type="text" placeholder={t('to')} value={filters.priceTo} onChange={(e) => handleFilterChange('priceTo', e.target.value)} /></div></div>
                 </div>
                 <div className="form-row">
-                    <div className="form-group"><label>City</label><input type="text" id="city" name="city" value={filters.city} onChange={(e) => handleFilterChange('city', e.target.value)} /></div>
-                    <div className="form-group"><button className="search-btn-red" onClick={handleSearch}>Search</button></div>
+                    <div className="form-group"><label>{t('city')}</label><input type="text" id="city" name="city" value={filters.city} onChange={(e) => handleFilterChange('city', e.target.value)} /></div>
+                    <div className="form-group"><button className="search-btn-red" onClick={handleSearch}>{t('search')}</button></div>
                 </div>
             </div>
         </div>
 
         <div className="latest-text">
-          <h2>Latest Cars</h2>
+          <h2>{t('latest_cars')}</h2>
         </div>
 
         <NewVehicles />
 
         <div className="reviews-section">
-            <h2>Customer Reviews</h2>
+            <h2>{t('customer_reviews')}</h2>
             {enableCarousel ? (
                 <div className="reviews-carousel">
                     <button className="carousel-btn prev" onClick={prevReview} disabled={isTransitioning}>&#10094;</button>
@@ -287,8 +289,8 @@ function Home() {
                                         </div>
                                         <p className="review-comment">{review.comment}</p>
                                         <div className="review-actions">
-                                            <button onClick={() => handleEdit(review)}>Edit</button>
-                                            <button onClick={() => handleDelete(review.id)}>Delete</button>
+                                            <button onClick={() => handleEdit(review)}>{t('edit')}</button>
+                                            <button onClick={() => handleDelete(review.id)}>{t('delete')}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -309,8 +311,8 @@ function Home() {
                                 </div>
                                 <p className="review-comment">{review.comment}</p>
                                 <div className="review-actions">
-                                    <button onClick={() => handleEdit(review)}>Edit</button>
-                                    <button onClick={() => handleDelete(review.id)}>Delete</button>
+                                    <button onClick={() => handleEdit(review)}>{t('edit')}</button>
+                                    <button onClick={() => handleDelete(review.id)}>{t('delete')}</button>
                                 </div>
                             </div>
                         </div>
@@ -318,13 +320,13 @@ function Home() {
                 </div>
             )}
             <div className="review-form-container">
-                <h3>Leave a Review</h3>
+                <h3>{t('leave_a_review')}</h3>
                 <form onSubmit={handleSubmitReview} className="review-form">
-                    <div className="rating-input"><p>Your Rating:</p><div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < (hoverRating || rating) ? 'star filled' : 'star'} onClick={() => setRating(i + 1)} onMouseEnter={() => setHoverRating(i + 1)} onMouseLeave={() => setHoverRating(0)}>★</span>))}
+                    <div className="rating-input"><p>{t('your_rating')}</p><div className="star-rating-input">{[...Array(5)].map((_, i) => (<span key={i} className={i < (hoverRating || rating) ? 'star filled' : 'star'} onClick={() => setRating(i + 1)} onMouseEnter={() => setHoverRating(i + 1)} onMouseLeave={() => setHoverRating(0)}>★</span>))}
                     </div></div>
-                    <div className="comment-input"><label htmlFor="name">Your Name (optional):</label><input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Leave blank for anonymous" /></div>
-                    <div className="comment-input"><label htmlFor="comment">Your Comment:</label><textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Share your experience with us..." rows="4" required></textarea></div>
-                    <button type="submit" className="submit-review-btn">Submit Review</button>
+                    <div className="comment-input"><label htmlFor="name">{t('your_name_optional')}</label><input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('leave_blank_anonymous')} /></div>
+                    <div className="comment-input"><label htmlFor="comment">{t('your_comment')}</label><textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t('share_your_experience')} rows="4" required></textarea></div>
+                    <button type="submit" className="submit-review-btn">{t('submit_review')}</button>
                 </form>
             </div>
         </div>

@@ -5,8 +5,10 @@ import axios from 'axios';
 import VehicleForm from './../components/VehicleForm';
 import api from './../api';
 import './../pagestyle/VehicleAds.css';
+import { useTranslation } from 'react-i18next';
 
 const InsuranceCalculator = ({ baseRate }) => {
+  const { t } = useTranslation();
   const [age, setAge] = useState('');
   const [experience, setExperience] = useState('');
   const [crashed, setCrashed] = useState('no');
@@ -28,29 +30,30 @@ const InsuranceCalculator = ({ baseRate }) => {
 
   return (
     <div className="insurance-calculator-section">
-      <h3>Insurance Calculator</h3>
+      <h3>{t('insurance_calculator')}</h3>
       <div className="form-group">
-        <label>Age</label>
+        <label>{t('age')}</label>
         <input type="number" value={age} onChange={(e) => setAge(e.target.value)} />
       </div>
       <div className="form-group">
-        <label>Years of Experience</label>
+        <label>{t('years_of_experience')}</label>
         <input type="number" value={experience} onChange={(e) => setExperience(e.target.value)} />
       </div>
       <div className="form-group">
-        <label>Crashed Before?</label>
+        <label>{t('crashed_before')}</label>
         <select value={crashed} onChange={(e) => setCrashed(e.target.value)}>
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
+          <option value="no">{t('no')}</option>
+          <option value="yes">{t('yes')}</option>
         </select>
       </div>
-      <button onClick={calculateInsurance}>Calculate</button>
-      {insurance && <div className="calculated-insurance">Estimated Insurance: €{insurance} / year</div>}
+      <button onClick={calculateInsurance}>{t('calculate')}</button>
+      {insurance && <div className="calculated-insurance">{t('estimated_insurance', { insurance })}</div>}
     </div>
   );
 };
 
 const HistoryCheck = ({ history }) => {
+  const { t } = useTranslation(['translation', 'dynamic']);
   const getIcon = (status) => {
     switch (status) {
       case 'passed':
@@ -66,11 +69,11 @@ const HistoryCheck = ({ history }) => {
 
   return (
     <div className="history-check-section">
-      <h3>History Check</h3>
+      <h3>{t('history_check')}</h3>
       <ul>
         {history && Object.entries(history).map(([key, value]) => (
           <li key={key}>
-            <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            <span>{t(key, { ns: 'dynamic' })}</span>
             {getIcon(value)}
           </li>
         ))}
@@ -80,6 +83,7 @@ const HistoryCheck = ({ history }) => {
 };
 
 const ReservationModal = ({ vehicle, onClose, onSubmit }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
 
   const handleChange = (e) => {
@@ -95,20 +99,20 @@ const ReservationModal = ({ vehicle, onClose, onSubmit }) => {
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3>Reserve {vehicle.name}</h3>
+          <h3>{t('reserve_vehicle_title', { vehicleName: vehicle.name })}</h3>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
+            <input type="text" name="name" placeholder={t('name')} value={formData.name} onChange={handleChange} required />
           </div>
           <div className="input-group">
-            <input type="tel" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
+            <input type="tel" name="phone" placeholder={t('phone')} value={formData.phone} onChange={handleChange} required />
           </div>
           <div className="input-group">
-            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+            <input type="email" name="email" placeholder={t('email')} value={formData.email} onChange={handleChange} required />
           </div>
-          <button type="submit" className="modal-submit">Confirm Reservation</button>
+          <button type="submit" className="modal-submit">{t('confirm_reservation')}</button>
         </form>
       </div>
     </div>
@@ -116,6 +120,7 @@ const ReservationModal = ({ vehicle, onClose, onSubmit }) => {
 };
 
 const VehicleAds = () => {
+  const { t } = useTranslation(['translation', 'dynamic']);
   const location = useLocation();
   const navigate = useNavigate();
   const [activeVehicleCategory, setActiveVehicleCategory] = useState('car');
@@ -143,30 +148,30 @@ const VehicleAds = () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUserId(payload.userId);
       } catch (error) {
-        console.error('Invalid token:', error);
+        console.error(t('invalid_token'), error);
       }
     }
-  }, []);
+  }, [t]);
 
   const isOwner = (vehicle) => {
     return vehicle.ownerId === userId;
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this ad?')) {
+    if (window.confirm(t('are_you_sure_delete_ad'))) {
       try {
         await api.delete(`/vehicles/${id}`);
         setAllVehicles(prevVehicles => prevVehicles.filter(v => v.id !== id));
         setVehicles(prevVehicles => prevVehicles.filter(v => v.id !== id));
       } catch (error) {
-        alert(error.response?.data?.message || 'Failed to delete ad.');
+        alert(error.response?.data?.message || t('failed_to_delete_ad'));
       }
     }
   };
 
   const handleModify = (vehicle) => {
     if (vehicle.package === 'premium' && vehicle.modifiedOnce) {
-      alert('This premium ad has already been modified once.');
+      alert(t('premium_ad_modified'));
       return;
     }
     setEditingVehicle(vehicle);
@@ -178,15 +183,15 @@ const VehicleAds = () => {
       // TODO: Handle image upload if the image is changed
       const { ...dataToSend } = formData;
       const response = await api.put(`/vehicles/${editingVehicle.id}`, dataToSend);
-      alert('Ad updated successfully!');
+      alert(t('ad_updated_successfully'));
       setShowEditModal(false);
       setEditingVehicle(null);
       // Update the vehicle in the list
       setAllVehicles(prevVehicles => prevVehicles.map(v => v.id === editingVehicle.id ? response.data : v));
       setVehicles(prevVehicles => prevVehicles.map(v => v.id === editingVehicle.id ? response.data : v));
     } catch (error) {
-      console.error('Error updating vehicle ad:', error);
-      alert('Failed to update vehicle ad. Please try again.');
+      console.error(t('error_updating_vehicle_ad'), error);
+      alert(t('failed_to_update_vehicle_ad'));
     }
   };
 
@@ -250,9 +255,9 @@ const VehicleAds = () => {
       setVehicles(mergedVehicles);
       setTotalPages(Math.ceil(mergedVehicles.length / 8));
     } catch (error) {
-      console.error("Error fetching vehicles:", error);
+      console.error(t("error_fetching_vehicles"), error);
     }
-  }, [location.state?.newAd]);
+  }, [location.state?.newAd, t]);
 
   useEffect(() => {
     fetchAllVehicles();
@@ -401,7 +406,7 @@ const VehicleAds = () => {
   };
 
   const handleSaveSearch = () => {
-    const searchName = prompt("Enter a name for this search:");
+    const searchName = prompt(t("enter_search_name"));
     if (searchName) {
         const newSearch = { name: searchName, filters, vehicleCategory: activeVehicleCategory };
         const updatedSearches = [...savedSearches, newSearch];
@@ -426,7 +431,7 @@ const VehicleAds = () => {
   const handleReserveClick = () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('Please log in to reserve a vehicle.');
+      alert(t('please_log_in_to_reserve_vehicle'));
       return;
     }
     setShowReserveModal(true);
@@ -438,15 +443,15 @@ const VehicleAds = () => {
     setVehicles(updatedVehicles);
     setSelectedVehicle({ ...selectedVehicle, reserved: true, reservedBy: userId });
     localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
-    alert('Vehicle reserved successfully (simulated)!');
+    alert(t('vehicle_reserved_successfully'));
     setShowReserveModal(false);
   };
 
   const handleCancelReservation = async (vehicle) => {
     if (vehicle.reservedBy !== userId) {
-        return alert("You cannot cancel someone else's reservation.");
+        return alert(t("cannot_cancel_other_reservation"));
     }
-    if (window.confirm('Are you sure you want to cancel this reservation?')) {
+    if (window.confirm(t('are_you_sure_cancel_reservation'))) {
       const updatedVehicles = allVehicles.map(v => v.id === vehicle.id ? { ...v, reserved: false, reservedBy: null } : v);
       setAllVehicles(updatedVehicles);
       setVehicles(updatedVehicles);
@@ -454,14 +459,14 @@ const VehicleAds = () => {
         setSelectedVehicle({ ...selectedVehicle, reserved: false, reservedBy: null });
       }
       localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
-      alert('Reservation cancelled successfully (simulated)!');
+      alert(t('reservation_cancelled_successfully'));
     }
   };
 
   const handleSave = async (vehicleAdId) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-        alert('Please log in to save items.');
+        alert(t('please_log_in_to_save'));
         return;
     }
 
@@ -471,12 +476,12 @@ const VehicleAds = () => {
                 Authorization: `Bearer ${token}`,
             },
         });
-        alert('Vehicle saved successfully!');
+        alert(t('vehicle_saved_successfully'));
     } catch (error) {
         if (error.response?.status === 409) {
-            alert('You have already saved this vehicle.');
+            alert(t('already_saved_vehicle'));
         } else {
-            alert(error.response?.data?.message || 'Failed to save vehicle.');
+            alert(error.response?.data?.message || t('failed_to_save_vehicle'));
         }
     }
   };
@@ -484,12 +489,12 @@ const VehicleAds = () => {
   const handleSaveStatic = (vehicle) => {
     const savedStaticVehicles = JSON.parse(localStorage.getItem('savedStaticVehicles')) || [];
     if (savedStaticVehicles.find(v => v.id === vehicle.id)) {
-        alert('You have already saved this vehicle.');
+        alert(t('already_saved_vehicle'));
         return;
     }
     savedStaticVehicles.push(vehicle);
     localStorage.setItem('savedStaticVehicles', JSON.stringify(savedStaticVehicles));
-    alert('Vehicle saved successfully! (simulated)');
+    alert(t('vehicle_saved_successfully_simulated'));
   };
 
   const scrollToTop = () => {
@@ -511,29 +516,29 @@ const VehicleAds = () => {
         <div className="main-content">
           <div className="filters-section">
             <div className="vehicle-category-tabs">
-                <button className={`category-tab ${activeVehicleCategory === 'car' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('car')}>🚗 Car</button>
-                <button className={`category-tab ${activeVehicleCategory === 'van' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('van')}>🚐 Van</button>
-                <button className={`category-tab ${activeVehicleCategory === 'motorcycle' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('motorcycle')}>🏍️ Motorcycle</button>
+                <button className={`category-tab ${activeVehicleCategory === 'car' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('car')}>🚗 {t('car')}</button>
+                <button className={`category-tab ${activeVehicleCategory === 'van' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('van')}>🚐 {t('van')}</button>
+                <button className={`category-tab ${activeVehicleCategory === 'motorcycle' ? 'active' : ''}`} onClick={() => handleVehicleCategoryChange('motorcycle')}>🏍️ {t('motorcycle')}</button>
             </div>
-            <h2>Search Filters</h2>
-            <div className="filter-group"><label>Mark</label><select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)}><option value="">Select Mark</option>{vehicleData[activeVehicleCategory].marks.map(type => (<option key={type} value={type}>{type}</option>))}</select></div>
-            <div className="filter-group"><label>Model</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">Select Model</option>{(vehicleData[activeVehicleCategory].models[filters.type] || []).map(model => (<option key={model} value={model}>{model}</option>))}</select></div>
-            <div className="filter-group range-filter"><label>Year</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
-            <div className="filter-group range-filter"><label>Price (€)</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.priceFrom} onChange={(e) => handleFilterChange('priceFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.priceTo} onChange={(e) => handleFilterChange('priceTo', e.target.value)} /></div></div>
-            <div className="filter-group"><label>Location</label><select value={filters.location} onChange={(e) => handleFilterChange('location', e.target.value)}><option value="">Select Location</option>{albanianCities.map(city => (<option key={city} value={city}>{city}</option>))}</select></div>
-            {activeVehicleCategory !== 'motorcycle' && <div className="filter-group"><label>Gearbox</label><select value={filters.transmitor} onChange={(e) => handleFilterChange('transmitor', e.target.value)}><option value="">Select Gearbox</option>{transmitorOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>}
-            <div className="filter-group"><label>Fuel</label><select value={filters.fuel} onChange={(e) => handleFilterChange('fuel', e.target.value)}><option value="">Select Fuel</option>{fuelOptions.map(option => (<option key={option} value={option}>{option}</option>))}</select></div>
-            <div className="filter-group range-filter"><label>Mileage</label><div className="range-inputs"><input type="number" placeholder="From" value={filters.mileageFrom} onChange={(e) => handleFilterChange('mileageFrom', e.target.value)} /><input type="number" placeholder="To" value={filters.mileageTo} onChange={(e) => handleFilterChange('mileageTo', e.target.value)} /></div></div>
-            <button className="search-button" onClick={handleSearch}>Search</button>
+            <h2>{t('search_filters')}</h2>
+            <div className="filter-group"><label>{t('mark')}</label><select value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)}><option value="">{t('select_mark')}</option>{vehicleData[activeVehicleCategory].marks.map(type => (<option key={type} value={type}>{t(type, { ns: 'dynamic' })}</option>))}</select></div>
+            <div className="filter-group"><label>{t('model')}</label><select value={filters.model} onChange={(e) => handleFilterChange('model', e.target.value)} disabled={!filters.type}><option value="">{t('select_model')}</option>{(vehicleData[activeVehicleCategory].models[filters.type] || []).map(model => (<option key={model} value={model}>{t(model, { ns: 'dynamic' })}</option>))}</select></div>
+            <div className="filter-group range-filter"><label>{t('year')}</label><div className="range-inputs"><input type="number" placeholder={t('from')} value={filters.yearFrom} onChange={(e) => handleFilterChange('yearFrom', e.target.value)} /><input type="number" placeholder={t('to')} value={filters.yearTo} onChange={(e) => handleFilterChange('yearTo', e.target.value)} /></div></div>
+            <div className="filter-group range-filter"><label>{t('price')} (€)</label><div className="range-inputs"><input type="number" placeholder={t('from')} value={filters.priceFrom} onChange={(e) => handleFilterChange('priceFrom', e.target.value)} /><input type="number" placeholder={t('to')} value={filters.priceTo} onChange={(e) => handleFilterChange('priceTo', e.target.value)} /></div></div>
+            <div className="filter-group"><label>{t('location')}</label><select value={filters.location} onChange={(e) => handleFilterChange('location', e.target.value)}><option value="">{t('select_location')}</option>{albanianCities.map(city => (<option key={city} value={city}>{city}</option>))}</select></div>
+            {activeVehicleCategory !== 'motorcycle' && <div className="filter-group"><label>{t('gearbox')}</label><select value={filters.transmitor} onChange={(e) => handleFilterChange('transmitor', e.target.value)}><option value="">{t('select_gearbox')}</option>{transmitorOptions.map(option => (<option key={option} value={option}>{t(option, { ns: 'dynamic' })}</option>))}</select></div>}
+            <div className="filter-group"><label>{t('fuel')}</label><select value={filters.fuel} onChange={(e) => handleFilterChange('fuel', e.target.value)}><option value="">{t('select_fuel')}</option>{fuelOptions.map(option => (<option key={option} value={option}>{t(option, { ns: 'dynamic' })}</option>))}</select></div>
+            <div className="filter-group range-filter"><label>{t('mileage')}</label><div className="range-inputs"><input type="number" placeholder={t('from')} value={filters.mileageFrom} onChange={(e) => handleFilterChange('mileageFrom', e.target.value)} /><input type="number" placeholder={t('to')} value={filters.mileageTo} onChange={(e) => handleFilterChange('mileageTo', e.target.value)} /></div></div>
+            <button className="search-button" onClick={handleSearch}>{t('search')}</button>
             
             <div className="saved-searches-section">
-                <button className="save-search-button" onClick={handleSaveSearch}>Save Search</button>
-                {savedSearches.length > 0 && <h4>Saved Searches</h4>}
+                <button className="save-search-button" onClick={handleSaveSearch}>{t('save_search')}</button>
+                {savedSearches.length > 0 && <h4>{t('saved_searches')}</h4>}
                 {savedSearches.map((search, index) => (
                     <div key={index} className="saved-search-item">
                         <span>{search.name}</span>
                         <div className="saved-search-buttons">
-                            <button onClick={() => handleLoadSearch(search)}>Load</button>
+                            <button onClick={() => handleLoadSearch(search)}>{t('load')}</button>
                             <button className="delete-button" onClick={() => handleDeleteSearch(index)}>X</button>
                         </div>
                     </div>
@@ -542,39 +547,39 @@ const VehicleAds = () => {
           </div>
           <div className="vehicles-section">
             <div className="sort-section">
-              <label>Sort by:</label>
+              <label>{t('sort_by')}</label>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="all">All</option>
-                <option value="premium">Premium Ads</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="year_asc">Year: Old to New</option>
-                <option value="year_desc">Year: New to Old</option>
+                <option value="all">{t('all')}</option>
+                <option value="premium">{t('premium_ads')}</option>
+                <option value="price_asc">{t('price_low_to_high')}</option>
+                <option value="price_desc">{t('price_high_to_low')}</option>
+                <option value="year_asc">{t('year_old_to_new')}</option>
+                <option value="year_desc">{t('year_new_to_old')}</option>
               </select>
-              <span className="results-count">{vehicles.length} results</span>
+              <span className="results-count">{t('results_count', { count: vehicles.length })}</span>
             </div>
             <div className="vehicle-cards">
               {(searched ? vehicles : allVehicles).slice((currentPage - 1) * 8, currentPage * 8).map(vehicle => (
-                <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''} ${vehicle.package === 'premium' ? 'premium' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? 'This vehicle is reserved' : ''}>
+                <div key={vehicle.id} className={`vehicle-card ${vehicle.reserved ? 'reserved' : ''} ${vehicle.package === 'premium' ? 'premium' : ''}`} onClick={() => !vehicle.reserved && setSelectedVehicle(vehicle)} title={vehicle.reserved ? t('vehicle_reserved_tooltip') : ''}>
                   
-                  {vehicle.reserved && <div className="reserved-badge">Reserved</div>}
+                  {vehicle.reserved && <div className="reserved-badge">{t('reserved')}</div>}
                   <div className="vehicle-image"><img src={vehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={vehicle.name} /></div>
                   <div className="vehicle-info">
                     <div className="vehicle-price">€{vehicle.price.toLocaleString()}</div>
-                    <div className="vehicle-name">{vehicle.name}</div>
-                    <div className="vehicle-details">{vehicle.year} • {vehicle.mileage.toLocaleString()} km • {vehicle.transmission} • {vehicle.fuel}</div>
+                    <div className="vehicle-name">{t(vehicle.name, { ns: 'dynamic' })}</div>
+                    <div className="vehicle-details">{vehicle.year} • {vehicle.mileage.toLocaleString()} km • {t(vehicle.transmission, { ns: 'dynamic' })} • {t(vehicle.fuel, { ns: 'dynamic' })}</div>
                     <div className="vehicle-location-phone">{vehicle.location} • {vehicle.phone}</div>
                     <div className="ad-actions">
                       <div className="ad-actions-left">
                         {isOwner(vehicle) && (
                           <>
-                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(vehicle)}}>Modify</button>
-                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(vehicle.id)}}>Delete</button>
+                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(vehicle)}}>{t('modify')}</button>
+                            <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(vehicle.id)}}>{t('delete')}</button>
                           </>
                         )}
                       </div>
                       <div className="ad-actions-right">
-                        {vehicle.reserved && vehicle.reservedBy === userId && <button className="ad-action-btn cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(vehicle);}}>Cancel Reservation</button>}
+                        {vehicle.reserved && vehicle.reservedBy === userId && <button className="ad-action-btn cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(vehicle);}}>{t('cancel_reservation')}</button>}
                       </div>
                     </div>
                   </div>
@@ -582,41 +587,41 @@ const VehicleAds = () => {
               ))}
             </div>
             <div className="pagination">
-                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Previous</button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>{t('previous')}</button>
+                <span>{t('page_of', { currentPage, totalPages })}</span>
+                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>{t('next')}</button>
             </div>
-            <button className="back-to-top" onClick={scrollToTop}>Back to Top</button>
+            <button className="back-to-top" onClick={scrollToTop}>{t('back_to_top')}</button>
           </div>
         </div>
       ) : (
         <div className="vehicle-detail">
-          <div className="detail-header"><button className="back-button" onClick={handleBackClick}>← Back to List</button><h1>{selectedVehicle.name}</h1></div>
+          <div className="detail-header"><button className="back-button" onClick={handleBackClick}>{t('back_to_list')}</button><h1>{t(selectedVehicle.name, { ns: 'dynamic' })}</h1></div>
           <div className="detail-content">
             <div className="detail-left">
-                <div className="spec-section"><h2>Vehicle Specifications</h2><div className="spec-grid"><div className="spec-item"><span className="spec-label">Make:</span><span className="spec-value">{selectedVehicle.make}</span></div><div className="spec-item"><span className="spec-label">Model:</span><span className="spec-value">{selectedVehicle.model}</span></div><div className="spec-item"><span className="spec-label">Year:</span><span className="spec-value">{selectedVehicle.year}</span></div><div className="spec-item"><span className="spec-label">Engine:</span><span className="spec-value">{selectedVehicle.engine}</span></div><div className="spec-item"><span className="spec-label">Fuel:</span><span className="spec-value">{selectedVehicle.fuel}</span></div><div className="spec-item"><span className="spec-label">Mileage:</span><span className="spec-value">{selectedVehicle.mileage.toLocaleString()} km</span></div><div className="spec-item"><span className="spec-label">Gearbox:</span><span className="spec-value">{selectedVehicle.transmission}</span></div><div className="spec-item"><span className="spec-label">Colour:</span><span className="spec-value">{selectedVehicle.color}</span></div><div className="spec-item"><span className="spec-label">Car Plates:</span><span className="spec-value">{selectedVehicle.carPlates}</span></div><div className="spec-item"><span className="spec-label">Power:</span><span className="spec-value">{selectedVehicle.power} HP</span></div></div></div>
+                <div className="spec-section"><h2>{t('vehicle_specifications')}</h2><div className="spec-grid"><div className="spec-item"><span className="spec-label">{t('make_label')}</span><span className="spec-value">{t(selectedVehicle.make, { ns: 'dynamic' })}</span></div><div className="spec-item"><span className="spec-label">{t('model_label')}</span><span className="spec-value">{t(selectedVehicle.model, { ns: 'dynamic' })}</span></div><div className="spec-item"><span className="spec-label">{t('year_label')}</span><span className="spec-value">{selectedVehicle.year}</span></div><div className="spec-item"><span className="spec-label">{t('engine_label')}</span><span className="spec-value">{selectedVehicle.engine}</span></div><div className="spec-item"><span className="spec-label">{t('fuel_label')}</span><span className="spec-value">{t(selectedVehicle.fuel, { ns: 'dynamic' })}</span></div><div className="spec-item"><span className="spec-label">{t('mileage_label')}</span><span className="spec-value">{selectedVehicle.mileage.toLocaleString()} km</span></div><div className="spec-item"><span className="spec-label">{t('gearbox_label')}</span><span className="spec-value">{t(selectedVehicle.transmission, { ns: 'dynamic' })}</span></div><div className="spec-item"><span className="spec-label">{t('colour_label')}</span><span className="spec-value">{t(selectedVehicle.color, { ns: 'dynamic' })}</span></div><div className="spec-item"><span className="spec-label">{t('car_plates_label')}</span><span className="spec-value">{selectedVehicle.carPlates}</span></div><div className="spec-item"><span className="spec-label">{t('power_label')}</span><span className="spec-value">{selectedVehicle.power} HP</span></div></div></div>
                 <div className="price-section">
                   <div className="main-price">€{selectedVehicle.price.toLocaleString()}</div>
                   <div className="price-actions">
                     <div className={`installments-section`}>
-                      <span>Pay by installments:</span>
+                      <span>{t('pay_by_installments')}</span>
                       <div className="installment-options">
-                        <button onClick={() => setInstallments(1)}>1 month</button>
-                        <button onClick={() => setInstallments(3)}>3 months</button>
-                        <button onClick={() => setInstallments(6)}>6 months</button>
-                        <button onClick={() => setInstallments(9)}>9 months</button>
-                        <button onClick={() => setInstallments(12)}>12 months</button>
+                        <button onClick={() => setInstallments(1)}>{t('month_1')}</button>
+                        <button onClick={() => setInstallments(3)}>{t('months_3')}</button>
+                        <button onClick={() => setInstallments(6)}>{t('months_6')}</button>
+                        <button onClick={() => setInstallments(9)}>{t('months_9')}</button>
+                        <button onClick={() => setInstallments(12)}>{t('months_12')}</button>
                       </div>
-                      {installments > 0 && <div className="installment-result">€{(selectedVehicle.price / installments).toFixed(2)} / month</div>}
+                      {installments > 0 && <div className="installment-result">{t('per_month', { price: (selectedVehicle.price / installments).toFixed(2) })}</div>}
                       
                     </div>
                     
-                    {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Vehicle</button>}
+                    {!selectedVehicle.reserved && <button className="reserve-btn" onClick={handleReserveClick}>{t('reserve_vehicle')}</button>}
 
                   </div>
                 </div>
                 {selectedVehicle.historyCheck && <HistoryCheck history={selectedVehicle.historyCheck} />}
-                {selectedVehicle.description && <div className="description-section"><h3>Description</h3><p>{selectedVehicle.description}</p></div>}
+                {selectedVehicle.description && <div className="description-section"><h3>{t('description')}</h3><p>{selectedVehicle.description}</p></div>}
                                                 <div className="seller-info"><div className="seller-item"><FaPhone /><span className="spec-value">{selectedVehicle.phone}</span></div><div className="seller-item"><FaMapMarkerAlt /><span className="spec-value">{selectedVehicle.location}</span></div></div>
             </div>
             <div className="detail-right">
@@ -624,7 +629,7 @@ const VehicleAds = () => {
                 <img src={selectedVehicle.imageUrl || 'https://via.placeholder.com/300x200'} alt={selectedVehicle.name} />
               </div>
               {selectedVehicle.insuranceBaseRate && <InsuranceCalculator baseRate={selectedVehicle.insuranceBaseRate} />}
-              <button className="save-btn save-btn-styled" onClick={() => selectedVehicle.isStatic ? handleSaveStatic(selectedVehicle) : handleSave(selectedVehicle.id)}><FaBookmark /> Save</button>
+              <button className="save-btn save-btn-styled" onClick={() => selectedVehicle.isStatic ? handleSaveStatic(selectedVehicle) : handleSave(selectedVehicle.id)}><FaBookmark /> {t('save')}</button>
             </div>
           </div>
           {showReserveModal && <ReservationModal vehicle={selectedVehicle} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
@@ -634,7 +639,7 @@ const VehicleAds = () => {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>Edit Vehicle Ad</h3>
+              <h3>{t('edit_vehicle_ad')}</h3>
               <button className="close-btn" onClick={() => setShowEditModal(false)}>×</button>
             </div>
             <VehicleForm

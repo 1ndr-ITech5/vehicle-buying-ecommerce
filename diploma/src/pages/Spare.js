@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCar, FaCog, FaTools, FaSprayCan, FaWhmcs, FaPlug, FaScrewdriver, FaInfoCircle, FaQuestionCircle, FaShoppingCart, FaBookmark } from 'react-icons/fa';
 import api from './../api';
 import './../pagestyle/Spare.css';
+import { useTranslation } from 'react-i18next';
 
 const Spare = () => {
+    const { t } = useTranslation(['translation', 'dynamic']);
     const location = useLocation();
     const navigate = useNavigate();
     const [view, setView] = useState('categories');
@@ -38,10 +40,10 @@ const Spare = () => {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 setUserId(payload.userId);
             } catch (error) {
-                console.error('Invalid token:', error);
+                console.error(t('invalid_token'), error);
             }
         }
-    }, []);
+    }, [t]);
 
     const [categories, setCategories] = useState([]);
 
@@ -64,11 +66,11 @@ const Spare = () => {
                 const response = await api.get('/parts/categories');
                 setCategories(response.data);
             } catch (error) {
-                console.error('Error fetching categories:', error);
+                console.error(t('error_fetching_categories'), error);
             }
         };
         fetchCategories();
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -79,12 +81,12 @@ const Spare = () => {
                     const response = await api.get(`/parts/${partId}`);
                     setSelectedPart(response.data);
                 } catch (error) {
-                    console.error('Error fetching part:', error);
+                    console.error(t('error_fetching_part'), error);
                 }
             };
             fetchPart();
         }
-    }, [location.search]);
+    }, [location.search, t]);
 
     const vehicleData = {
         car: {
@@ -145,9 +147,9 @@ const Spare = () => {
             setInitialParts(partsFromApi);
             setParts(partsFromApi);
         } catch (error) {
-            console.error("Error fetching parts:", error);
+            console.error(t("error_fetching_parts"), error);
         }
-    }, [selectedSubCategory]);
+    }, [selectedSubCategory, t]);
 
     useEffect(() => {
         if (view === 'parts' && selectedSubCategory) {
@@ -192,7 +194,7 @@ const Spare = () => {
     };
 
     const handleSaveSearch = () => {
-        const searchName = prompt("Enter a name for this search:");
+        const searchName = prompt(t("enter_search_name"));
         if (searchName) {
             const newSearch = { name: searchName, filters };
             const updatedSearches = [...savedSearches, newSearch];
@@ -265,7 +267,7 @@ const Spare = () => {
     const handleReserveClick = () => {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert('Please log in to reserve a part.');
+            alert(t('please_log_in_to_reserve'));
             return;
         }
         setShowReserveModal(true);
@@ -276,29 +278,29 @@ const Spare = () => {
         setParts(updatedParts);
         setSelectedPart({ ...selectedPart, reserved: true, reservedBy: userId });
         localStorage.setItem('parts', JSON.stringify(updatedParts));
-        alert('Part reserved successfully (simulated)!');
+        alert(t('part_reserved_successfully'));
         setShowReserveModal(false);
     };
 
     const handleCancelReservation = (part) => {
         if (part.reservedBy !== userId) {
-            return alert("You cannot cancel someone else's reservation.");
+            return alert(t("cannot_cancel_other_reservation"));
         }
-        if (window.confirm('Are you sure you want to cancel this reservation?')) {
+        if (window.confirm(t('are_you_sure_cancel_reservation'))) {
             const updatedParts = parts.map(p => p.id === part.id ? { ...p, reserved: false, reservedBy: null } : p);
             setParts(updatedParts);
             if (selectedPart && selectedPart.id === part.id) {
                 setSelectedPart({ ...selectedPart, reserved: false, reservedBy: null });
             }
             localStorage.setItem('parts', JSON.stringify(updatedParts));
-            alert('Reservation cancelled successfully (simulated)!');
+            alert(t('reservation_cancelled_successfully'));
         }
     };
 
     const handleSave = async (partAdId) => {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            alert('Please log in to save items.');
+            alert(t('please_log_in_to_save'));
             return;
         }
 
@@ -308,12 +310,12 @@ const Spare = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            alert('Part saved successfully!');
+            alert(t('part_saved_successfully'));
         } catch (error) {
             if (error.response?.status === 409) {
-                alert('You have already saved this part.');
+                alert(t('already_saved_part'));
             } else {
-                alert(error.response?.data?.message || 'Failed to save part.');
+                alert(error.response?.data?.message || t('failed_to_save_part'));
             }
         }
     };
@@ -325,13 +327,13 @@ const Spare = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this ad?')) {
+        if (window.confirm(t('are_you_sure_delete_ad'))) {
             try {
                 await api.delete(`/parts/${id}`);
                 setInitialParts(prevParts => prevParts.filter(p => p.id !== id));
                 setParts(prevParts => prevParts.filter(p => p.id !== id));
             } catch (error) {
-                alert(error.response?.data?.message || 'Failed to delete ad.');
+                alert(error.response?.data?.message || t('failed_to_delete_ad'));
             }
         }
     };
@@ -353,13 +355,13 @@ const Spare = () => {
     const renderCategories = () => {
         return (
             <div>
-                <h1 className="main-title">Automotive Parts</h1>
+                <h1 className="main-title">{t('automotive_parts')}</h1>
                 <div className="title-underline"></div>
                 <div className="category-grid"> {/* Use a grid for better layout */}
                     {categories.map(category => (
                         <div key={category.id} className="category-card" onClick={() => handleCategoryClick(category)}>
                             <div className="category-icon">{categoryIcons[category.name]}</div>
-                            <h3>{category.name}</h3>
+                            <h3>{t(category.name, { ns: 'dynamic' })}</h3>
                         </div>
                     ))}
                 </div>
@@ -369,12 +371,12 @@ const Spare = () => {
 
     const renderSubCategories = () => (
         <div>
-            <button className="back-btn" onClick={() => { setView('categories'); setSelectedCategory(null); }}>← Back to Categories</button>
-            <h2>{selectedCategory.name}</h2>
+            <button className="back-btn" onClick={() => { setView('categories'); setSelectedCategory(null); }}>{t('back_to_categories')}</button>
+            <h2>{t(selectedCategory.name, { ns: 'dynamic' })}</h2>
             <div className="subcategory-list">
                 {selectedCategory.subCategories.map((sub) => (
                     <div key={sub.id} className="subcategory-item" onClick={() => handleSubCategoryClick(sub)}>
-                        {sub.name}
+                        {t(sub.name, { ns: 'dynamic' })}
                     </div>
                 ))}
             </div>
@@ -390,60 +392,60 @@ const Spare = () => {
         return (
             <div className="parts-view" style={{ display: 'flex' }}>
                 <div className="filters-sidebar" style={{ flex: '35%' }}>
-                    <button className="back-btn" onClick={() => { setView('subcategories'); setParts([]); }}>← Back to Sub-categories</button>
-                    <h3>FILTERS</h3>
+                    <button className="back-btn" onClick={() => { setView('subcategories'); setParts([]); }}>{t('back_to_subcategories')}</button>
+                    <h3>{t('filters')}</h3>
                     
-                    <label htmlFor="vehicleType">Vehicle Type</label>
+                    <label htmlFor="vehicleType">{t('vehicle_type')}</label>
                     <select id="vehicleType" value={filters.vehicleType} onChange={handleVehicleTypeChange}>
-                        <option value="">All Types</option>
-                        <option value="car">Car</option>
-                        <option value="van">Van</option>
-                        <option value="motorcycle">Motorcycle</option>
+                        <option value="">{t('all_types')}</option>
+                        <option value="car">{t('car')}</option>
+                        <option value="van">{t('van')}</option>
+                        <option value="motorcycle">{t('motorcycle')}</option>
                     </select>
 
-                    <label htmlFor="carMark">Mark</label>
+                    <label htmlFor="carMark">{t('mark')}</label>
                     <select id="carMark" value={filters.carMark} onChange={handleMarkChange} disabled={!filters.vehicleType}>
-                        <option value="">All Marks</option>
+                        <option value="">{t('all_marks')}</option>
                         {availableMarks.map(mark => <option key={mark} value={mark}>{mark}</option>)}
                     </select>
 
-                    <label htmlFor="carModel">Model</label>
+                    <label htmlFor="carModel">{t('model')}</label>
                     <select id="carModel" value={filters.carModel} onChange={e => handleFilterChange('carModel', e.target.value)} disabled={!filters.carMark}>
-                        <option value="">All Models</option>
+                        <option value="">{t('all_models')}</option>
                         {availableModels.map(model => <option key={model} value={model}>{model}</option>)}
                     </select>
 
-                    <label>Year Range</label>
+                    <label>{t('year_range')}</label>
                     <div className="range-inputs">
-                        <input type="number" placeholder="From" value={filters.yearFrom} onChange={e => handleFilterChange('yearFrom', e.target.value)} />
-                        <input type="number" placeholder="To" value={filters.yearTo} onChange={e => handleFilterChange('yearTo', e.target.value)} />
+                        <input type="number" placeholder={t('from')} value={filters.yearFrom} onChange={e => handleFilterChange('yearFrom', e.target.value)} />
+                        <input type="number" placeholder={t('to')} value={filters.yearTo} onChange={e => handleFilterChange('yearTo', e.target.value)} />
                     </div>
 
-                    <label>Price Range (€)</label>
+                    <label>{t('price_range')}</label>
                     <div className="range-inputs">
-                        <input type="number" placeholder="From" value={filters.priceFrom} onChange={e => handleFilterChange('priceFrom', e.target.value)} />
-                        <input type="number" placeholder="To" value={filters.priceTo} onChange={e => handleFilterChange('priceTo', e.target.value)} />
+                        <input type="number" placeholder={t('from')} value={filters.priceFrom} onChange={e => handleFilterChange('priceFrom', e.target.value)} />
+                        <input type="number" placeholder={t('to')} value={filters.priceTo} onChange={e => handleFilterChange('priceTo', e.target.value)} />
                     </div>
 
-                    <label>Condition</label>
+                    <label>{t('condition')}</label>
                     <div className="checkbox-group">
                         <input type="checkbox" id="conditionNew" checked={filters.condition.includes('New')} onChange={() => handleConditionChange('New')} />
-                        <label htmlFor="conditionNew">New</label>
+                        <label htmlFor="conditionNew">{t('new')}</label>
                         <input type="checkbox" id="conditionUsed" checked={filters.condition.includes('Used')} onChange={() => handleConditionChange('Used')} />
-                        <label htmlFor="conditionUsed">Used</label>
+                        <label htmlFor="conditionUsed">{t('used')}</label>
                     </div>
 
-                    <button onClick={handleSearch}>Search</button>
-                    <button onClick={handleSaveSearch} className="save-search-btn">Save Search</button>
+                    <button onClick={handleSearch}>{t('search')}</button>
+                    <button onClick={handleSaveSearch} className="save-search-btn">{t('save_search')}</button>
 
                     {savedSearches.length > 0 && (
                         <div className="saved-searches">
-                            <h4>SAVED SEARCHES</h4>
+                            <h4>{t('saved_searches_title')}</h4>
                             <ul>
                                 {savedSearches.map((search, index) => (
                                     <li key={index}>
                                         <span>{search.name}</span>
-                                        <button onClick={() => handleLoadSearch(search)}>Load</button>
+                                        <button onClick={() => handleLoadSearch(search)}>{t('load')}</button>
                                         <button onClick={() => handleDeleteSearch(index)}>X</button>
                                     </li>
                                 ))}
@@ -453,13 +455,13 @@ const Spare = () => {
                 </div>
 
                 <div className="parts-list" style={{ flex: '65%' }}>
-                    <h2>{selectedSubCategory.name}</h2>
-                    <p>{parts.length} parts found</p>
+                    <h2>{t(selectedSubCategory.name, { ns: 'dynamic' })}</h2>
+                    <p>{t('parts_found', { count: parts.length })}</p>
                     <div className="part-cards">
                         {currentItems.map(part => (
                             <div key={part.id} className={`part-card ${part.reserved ? 'reserved' : ''} ${part.package === 'premium' ? 'premium' : ''}`} onClick={() => !part.reserved && handlePartClick(part)}>
                                 
-                                {part.reserved && <div className="reserved-badge">Reserved</div>}
+                                {part.reserved && <div className="reserved-badge">{t('reserved')}</div>}
                                 <img src={part.imageUrl} alt={part.name} className="part-image-placeholder" />
                                 <div className="part-details">
                                     <div className="part-name">{part.name}</div>
@@ -471,20 +473,20 @@ const Spare = () => {
                                     <div className="ad-actions">
                                         {isOwner(part) && (
                                             <>
-                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(part)}}>Modify</button>
-                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(part.id)}}>Delete</button>
+                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleModify(part)}}>{t('modify')}</button>
+                                                <button className="ad-action-btn" onClick={(e) => {e.stopPropagation(); handleDelete(part.id)}}>{t('delete')}</button>
                                             </>
                                         )}
                                     </div>
-                                    {part.reserved && part.reservedBy === userId && <button className="cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(part);}}>Cancel Reservation</button>}
+                                    {part.reserved && part.reservedBy === userId && <button className="cancel-reservation-btn" onClick={(e) => {e.stopPropagation(); handleCancelReservation(part);}}>{t('cancel_reservation')}</button>}
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="pagination">
-                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Previous</button>
-                        <span>Page {currentPage} of {Math.ceil(parts.length / itemsPerPage)}</span>
-                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(parts.length / itemsPerPage)))} disabled={currentPage === Math.ceil(parts.length / itemsPerPage)}>Next</button>
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>{t('previous')}</button>
+                        <span>{t('page_of', { currentPage, totalPages: Math.ceil(parts.length / itemsPerPage) })}</span>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(parts.length / itemsPerPage)))} disabled={currentPage === Math.ceil(parts.length / itemsPerPage)}>{t('next')}</button>
                     </div>
                 </div>
             </div>
@@ -495,56 +497,56 @@ const Spare = () => {
         console.log('selectedPart:', selectedPart);
         return (
             <div className="part-detail-view">
-                <button className="back-btn" onClick={handleBackClick}>← Back to Parts</button>
+                <button className="back-btn" onClick={handleBackClick}>{t('back_to_parts')}</button>
                 <div className="part-detail-content">
                     <div className="part-detail-left">
                         <h2>{selectedPart.name}</h2>
                         <div className="spec-section">
-                            <h2>Spare Info</h2>
+                            <h2>{t('spare_info')}</h2>
                             <div className="spec-grid">
                                                                                             <div className="spec-item">
-                                                                <span className="spec-label">Mark:</span>
+                                                                <span className="spec-label">{t('mark_label')}</span>
                                                                 <span className="spec-value">{selectedPart.carMark}</span>
                                                             </div>
                                                             <div className="spec-item">
-                                                                <span className="spec-label">Model:</span>
+                                                                <span className="spec-label">{t('model_label')}</span>
                                                                 <span className="spec-value">{selectedPart.carModel}</span>
                                                             </div>                                <div className="spec-item">
-                                    <span className="spec-label">Condition:</span>
+                                    <span className="spec-label">{t('condition_label')}</span>
                                     <span className="spec-value">{selectedPart.condition}</span>
                                 </div>
                                 <div className="spec-item">
-                                    <span className="spec-label">Location:</span>
+                                    <span className="spec-label">{t('location_label')}</span>
                                     <span className="spec-value">{selectedPart.location}</span>
                                 </div>
                                 <div className="spec-item">
-                                    <span className="spec-label">Year:</span>
+                                    <span className="spec-label">{t('year_label')}</span>
                                     <span className="spec-value">{selectedPart.year}</span>
                                 </div>
                                 <div className="spec-item">
-                                    <span className="spec-label">Price:</span>
+                                    <span className="spec-label">{t('price_label')}</span>
                                     <span className="spec-value">€{selectedPart.price}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="reserve-btn-container">
-                            {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>Reserve Part</button>}
-                            {selectedPart.reserved && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>Cancel Reservation</button>}
+                            {!selectedPart.reserved && <button className="reserve-btn" onClick={handleReserveClick}>{t('reserve_part')}</button>}
+                            {selectedPart.reserved && <button className="cancel-reservation-btn" onClick={() => handleCancelReservation(selectedPart)}>{t('cancel_reservation')}</button>}
                         </div>
                         <div className="description-section">
-                            <h3>Description</h3>
+                            <h3>{t('description')}</h3>
                             <p>{selectedPart.description}</p>
                         </div>
                         <div className="seller-info">
-                            <h3>Seller Information</h3>
-                            <p>Name: {selectedPart.sellerName}</p>
+                            <h3>{t('seller_information')}</h3>
+                            <p>{t('seller_name', { name: selectedPart.sellerName })}</p>
                             
-                            <p>Contact: {selectedPart.phone}</p>
+                            <p>{t('seller_contact', { phone: selectedPart.phone })}</p>
                         </div>
                     </div>
                     <div className="part-detail-right">
                         <img src={selectedPart.imageUrl} alt={selectedPart.name} />
-                        <button className="save-btn" onClick={() => handleSave(selectedPart.id)}><FaBookmark /> Save</button>
+                        <button className="save-btn" onClick={() => handleSave(selectedPart.id)}><FaBookmark /> {t('save')}</button>
                     </div>
                 </div>
                 {showReserveModal && <ReservationModal part={selectedPart} onClose={() => setShowReserveModal(false)} onSubmit={handleReservationSubmit} />}
@@ -568,20 +570,20 @@ const Spare = () => {
             <div className="modal-overlay">
                 <div className="modal">
                     <div className="modal-header">
-                        <h3>Reserve {part.name}</h3>
+                        <h3>{t('reserve_part_title', { partName: part.name })}</h3>
                         <button className="close-btn" onClick={onClose}>×</button>
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="input-group">
-                            <input type="text" name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
+                            <input type="text" name="name" placeholder={t('name')} value={formData.name} onChange={handleChange} required />
                         </div>
                         <div className="input-group">
-                            <input type="tel" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
+                            <input type="tel" name="phone" placeholder={t('phone')} value={formData.phone} onChange={handleChange} required />
                         </div>
                         <div className="input-group">
-                            <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+                            <input type="email" name="email" placeholder={t('email')} value={formData.email} onChange={handleChange} required />
                         </div>
-                        <button type="submit" className="modal-submit">Confirm Reservation</button>
+                        <button type="submit" className="modal-submit">{t('confirm_reservation')}</button>
                     </form>
                 </div>
             </div>
