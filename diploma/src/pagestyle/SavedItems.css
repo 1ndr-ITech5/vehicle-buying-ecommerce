@@ -173,3 +173,29 @@ h2 {
         background-position: -200% 0;
     }
 }
+
+.header-with-button {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the content */
+    width: 100%;
+    max-width: 1200px;
+    position: relative; /* Add relative positioning */
+}
+
+.header-with-button h1 {
+    flex-grow: 1; /* Allow the h1 to take up the available space */
+    text-align: center; /* Center the text inside the h1 */
+}
+
+.go-back-button {
+    background-color: #ff9d0a;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    position: absolute; /* Position the button absolutely */
+    left: 0; /* Align to the left */
+}

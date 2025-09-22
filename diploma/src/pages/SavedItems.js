@@ -100,9 +100,12 @@ const SavedItems = () => {
     };
 
 
-    return (
+        return (
         <div className="saved-items-container">
-            <h1>{t('my_saved_items')}</h1>
+            <div className="header-with-button">
+                <button onClick={() => navigate(-1)} className="go-back-button">{t('go_back')}</button>
+                <h1>{t('my_saved_items')}</h1>
+            </div>
             <div className="saved-items-section">
                 <h2>{t('saved_vehicles')}</h2>
                 {savedVehicleAds.length > 0 ? (
