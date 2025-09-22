@@ -11,8 +11,8 @@ function NewVehicles() {
 
   const fetchVehicles = useCallback(async () => {
     try {
-      const response = await axios.get('/db.json');
-      setVehicles(response.data.vehicles.slice(0, 6));
+      const response = await axios.get('http://localhost:3001/api/vehicles');
+      setVehicles(response.data.slice(0, 6));
     } catch (error) {
       console.error("Error fetching vehicles:", error);
     }
@@ -26,7 +26,10 @@ function NewVehicles() {
     <div className="new-vehicle-section">
       <div className="new-car-grid">
         {vehicles.map(vehicle => (
-          <div className="new-car-card" key={vehicle.id} onClick={() => navigate(`/vehicle-ads?vehicleId=${vehicle.id}`)}>
+          <div className="new-car-card" key={vehicle.id} onClick={() => {
+              sessionStorage.setItem('scrollPos', window.scrollY);
+              navigate(`/vehicle-ads?vehicleId=${vehicle.id}`, { state: { from: 'home' } });
+            }}>
             <div className="new-car-image-placeholder" style={{ backgroundImage: `url(${vehicle.imageUrl || 'https://via.placeholder.com/300x200'})`, backgroundSize: 'cover' }}></div>
             <div className="new-car-details">
               <p className="new-car-price">€{vehicle.price.toLocaleString()}</p>

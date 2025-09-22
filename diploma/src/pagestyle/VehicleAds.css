@@ -420,12 +420,16 @@ input[type="number"] {
 
 /* Detailed Vehicle View */
 .vehicle-detail {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-y: auto;
+  z-index: 1000; /* Ensure it's on top of other content */
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .detail-header {

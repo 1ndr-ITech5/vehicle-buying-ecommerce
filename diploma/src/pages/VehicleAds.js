@@ -289,13 +289,30 @@ const VehicleAds = () => {
 
   
 
+
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const vehicleId = params.get('vehicleId');
-    if (vehicleId && allVehicles.length > 0) {
-      const vehicle = allVehicles.find(v => v.id === parseInt(vehicleId));
-      if (vehicle) {
-        setSelectedVehicle(vehicle);
+    if (vehicleId) {
+      const fetchVehicle = async () => {
+        try {
+          const response = await api.get(`/vehicles/${vehicleId}`);
+          setSelectedVehicle(response.data);
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+          }, 100); // Scroll to top after a short delay
+        } catch (error) {
+          console.error("Error fetching vehicle:", error);
+        }
+      };
+      fetchVehicle();
+    } else {
+      setSelectedVehicle(null);
+      const storedScrollPos = sessionStorage.getItem('scrollPos');
+      if (storedScrollPos) {
+        window.scrollTo(0, parseInt(storedScrollPos));
+        sessionStorage.removeItem('scrollPos');
       }
     }
   }, [location.search, allVehicles]);
@@ -501,14 +518,25 @@ const VehicleAds = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  useEffect(() => {
+    if (!selectedVehicle) {
+      const storedScrollPos = sessionStorage.getItem('scrollPos');
+      if (storedScrollPos) {
+        window.scrollTo(0, parseInt(storedScrollPos));
+        sessionStorage.removeItem('scrollPos');
+      }
+    }
+  }, [selectedVehicle]);
+
   const handleBackClick = () => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('from') === 'saved-items') {
-      navigate('/saved-items');
+    if (location.state?.from === 'home') {
+      navigate('/');
     } else {
       setSelectedVehicle(null);
     }
   };
+
+
 
   return (
     <div className="vehicle-ads-container">
